@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% block title %} {{ request.user |capfirst }}'s Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Flash Messages -->
+    {% if messages %}
+    <div class="mb-4">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show flash-message" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Full-page welcome section -->
+    <h1>Welcome, {{ request.user |capfirst }}!</h1>
+    <p>Here you can attempt tests, view your progress, and analyze your performance.</p>
+    
+    <!-- Create the 30% and 70% sections for future content -->
+    <div class="row mt-4">
+        <!-- 30% section for student action links -->
+        <div class="col-md-4">
+            <ul class="list-unstyled">
+                <li><a href="{% url 'attempt_test:list_tests' %}">Attempt Tests</a></li>
+                <li><a href="{% url 'student_dashboard' %}">View Performance</a></li>
+                <!-- More links can be added in future -->
+            </ul>
+        </div>
+
+        <!-- 70% section for future content (currently empty) -->
+        <div class="col-md-8">
+            <!-- Placeholder for future content -->
+        </div>
+    </div>
+</div>
+
+<!-- Script to auto-hide flash messages -->
+<script>
+    // Auto-hide flash messages after 3 seconds
+    setTimeout(() => {
+        const flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach((message) => {
+            message.classList.remove('show'); // Removes "show" class from alert
+            setTimeout(() => message.remove(), 150); // Removes element after fade-out
+        });
+    }, 3000); // Adjust timeout duration as needed (3000ms = 3 seconds)
+</script>
+{% endblock %}

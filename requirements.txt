@@ -1,0 +1,13 @@
+asgiref
+autopep8
+channels
+channels_redis
+Django
+django-widget-tweaks
+mysqlclient
+msgpack
+pillow
+pycodestyle
+redis
+sqlparse
+typing_extensions

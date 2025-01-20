@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Profile{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Your Profile</h2>
+    <!-- Profile Picture Section -->
+    {% if user.profile_picture %}
+    <img src="{{ user.profile_picture.url }}" alt="Profile Picture" class="img-thumbnail" width="200px">
+    {% else %}
+    <img src="{% static 'images/default-profile.png' %}" alt="Default Profile Picture" class="img-thumbnail"
+        width="200px">
+    {% endif %}
+
+    <p><strong>Name:</strong> {{ user.username }}</p>
+    <p><strong>Email:</strong> {{ user.email }}</p>
+    <p><strong>Role:</strong> {{ user.get_role_display }}</p>
+
+    {% if user.role == 'student' %}
+    <h4>Your Test Attempts:</h4>
+    <ul>
+        <li>Test 1: Passed - Score: 85</li> <!-- Example data -->
+        <li>Test 2: Failed - Score: 45</li> <!-- Example data -->
+    </ul>
+    {% endif %}
+
+    <a href="{% url 'profile_edit' %}" class="btn btn-primary mt-2">Edit Profile</a>
+    <a href="{% url 'profile_delete' %}" class="btn btn-danger mt-2">Delete Profile</a>
+    <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary mt-2">Cancel</a>
+</div>
+{% endblock %}

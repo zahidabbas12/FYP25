@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="container vh-100 d-flex align-items-start justify-content-center pt-5">
+    <div class="col-12 col-md-8 col-lg-6"> <!-- Adjust widths for different breakpoints -->
+        <!-- Flash Messages -->
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <h2 class="text-center mb-4">Register</h2>
+        <form method="post" class="bg-light p-3 p-sm-4 rounded shadow-sm">
+            {% csrf_token %}
+            {% load widget_tweaks %}
+
+            <!-- Username Field -->
+            <div class="mb-3">
+                <label for="{{ form.username.id_for_label }}" class="form-label">Username</label>
+                {{ form.username|add_class:"form-control" }}
+                {% if form.username.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.username.errors|join:", " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Email Field -->
+            <div class="mb-3">
+                <label for="{{ form.email.id_for_label }}" class="form-label">Email address</label>
+                {{ form.email|add_class:"form-control" }}
+                {% if form.email.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.email.errors|join:", " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Password1 Field -->
+            <div class="mb-3">
+                <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
+                {{ form.password1|add_class:"form-control" }}
+                {% if form.password1.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.password1.errors|join:", " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Password2 Field -->
+            <div class="mb-3">
+                <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
+                {{ form.password2|add_class:"form-control" }}
+                {% if form.password2.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.password2.errors|join:", " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Role Field -->
+            <div class="mb-3">
+                <label for="{{ form.role.id_for_label }}" class="form-label">Role</label>
+                {{ form.role|add_class:"form-control" }}
+                {% if form.role.errors %}
+                <div class="text-danger small mt-1">
+                    {{ form.role.errors|join:", " }}
+                </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary d-block mx-auto mb-2">Register</button>
+            <a href="{% url 'login' %}" class="btn-info btn-sm d-block mx-auto">Already have an accout</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

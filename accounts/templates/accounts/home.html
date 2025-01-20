@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <h1>Welcome to the MCQ System</h1>
+    <p>Whether you are a student or a teacher, start exploring your journey with us!</p>
+
+    {% if user.is_authenticated %}
+    <a href="{% url 'redirect_dashboard' %}" class="btn btn-primary">Go to Dashboard</a>
+    {% else %}
+    <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+    <a href="{% url 'register' %}" class="btn btn-secondary">Register</a>
+    {% endif %}
+</div>
+{% endblock %}

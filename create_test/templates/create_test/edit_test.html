@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="text-center mt-4 mb-4">Edit Test: {{ test.title }}</h1>
+
+    <!-- Test Information Section -->
+    <form method="POST" class="p-4 border rounded shadow-sm">
+        {% csrf_token %}
+
+        <!-- Title Field -->
+        <div class="mb-3">
+            <label for="title" class="form-label">Title:</label>
+            <input type="text" name="title" class="form-control" value="{{ test.title }}" required>
+        </div>
+
+        <!-- Duration Field -->
+        <div class="mb-3">
+            <label for="duration" class="form-label">Duration (in minutes):</label>
+            <input type="number" name="duration" class="form-control" value="{{ test.duration }}" required>
+        </div>
+
+        <!-- Pass mark Field -->
+        <div class="mb-3">
+            <label for="pass_mark" class="form-label">Pass Mark:</label>
+            <input type="number" name="pass_mark" class="form-control" value="{{ test.pass_mark }}" required>
+            <small class="text-muted">Enter pass percentage (e.g., 50 for 50%).</small>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="d-flex flex-column flex-sm-row justify-content-start align-items-center">
+            <button type="submit" class="btn btn-warning btn-sm">Update Test</button>
+            <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary btn-sm ms-2">Cancel</a>
+        </div>
+        
+    </form>
+
+    <!-- MCQ Management Section -->
+    <h3 class="mt-4">Manage MCQs for this Test</h3>
+
+    <!-- Add MCQs Button -->
+    <a href="{% url 'add_mcqs_to_test' test.id %}" class="btn btn-primary mb-3">Add MCQs</a>
+
+    <!-- List existing MCQs associated with the Test -->
+    <h4>Existing MCQs:</h4>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">MCQ</th>
+                <th scope="col">Order</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for test_mcq in test_mcqs %}
+                <tr>
+                    <td>{{ test_mcq.mcq.question }}</td>
+                    <td>{{ test_mcq.order }}</td>
+                    <td>
+                        <!-- You can add actions such as 'delete' or 'change order' here -->
+                    </td>
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="3" class="text-center">No MCQs added to this test yet.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
