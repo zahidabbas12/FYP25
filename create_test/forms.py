@@ -1,9 +1,11 @@
-from django import forms
 from .models import Test, TestMCQ
 from question_bank.models import MCQ
+from django import forms
+
 
 class TestForm(forms.ModelForm):
     """Form for creating/editing a Test."""
+    
     class Meta:
         model = Test
         fields = ['title', 'description', 'duration', 'pass_mark', 'is_published']
@@ -12,6 +14,9 @@ class TestForm(forms.ModelForm):
             'duration': forms.NumberInput(attrs={'min': 1, 'placeholder': 'Enter duration in minutes'}),
             'pass_mark': forms.NumberInput(attrs={'min': 1, 'max': 100, 'placeholder': 'Enter pass percentage'}),
         }
+
+    is_published = forms.BooleanField(required=False, label="Publish this test", initial=False)
+
 
 class AddMCQToTestForm(forms.Form):
     """Form for selecting MCQs to add to a test."""

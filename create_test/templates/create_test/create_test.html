@@ -1,74 +1,79 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container my-5">
-    <h2 class="text-center mb-4">Create a New Test</h2>
-    <form method="POST" class="p-4 border rounded shadow-sm bg-light">
-        {% csrf_token %}
-        
-        <!-- Title Input -->
-        <div class="mb-3">
-            <label for="title" class="form-label">Title:</label>
-            <input type="text" id="title" name="title" class="form-control" required>
-        </div>
-        
-        <!-- Description Textarea -->
-        <div class="mb-3">
-            <label for="description" class="form-label">Description:</label>
-            <textarea id="description" name="description" class="form-control" rows="4" required></textarea>
-        </div>
-        
-        <!-- Duration Input -->
-        <div class="mb-3">
-            <label for="duration" class="form-label">Duration (in minutes):</label>
-            <input type="number" id="duration" name="duration" class="form-control" required>
-            <small class="text-muted">Enter the duration in minutes.</small>
-        </div>
-        
-        <!-- Pass Mark Input -->
-        <div class="mb-3">
-            <label for="pass_mark" class="form-label">Pass Mark:</label>
-            <input type="number" id="pass_mark" name="pass_mark" class="form-control" required>
-            <small class="text-muted">Pass percentage (e.g., 50 for 50%).</small>
-        </div>
-        
-        <!-- Is Published Dropdown -->
-        <div class="mb-3">
-            <label for="is_published" class="form-label">Is Published:</label>
-            <select id="is_published" name="is_published" class="form-select" required>
-                <option value="yes">Yes</option>
-                <option value="no">No</option>
-            </select>
-        </div>
-        
-        <!-- Add Questions -->
-        <h4 class="mb-3">Add Questions to Test</h4>
-        <div class="mb-3">
-            {% if all_mcqs %}
-                {% for mcq in all_mcqs %}
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" name="mcqs[]" value="{{ mcq.id }}" id="mcq-{{ mcq.id }}">
-                        <label class="form-check-label" for="mcq-{{ mcq.id }}">
-                            {{ mcq.question }}  <!-- Corrected field reference -->
-                        </label>
+<div class="container-fluid">
+    <h1 class="text-center mt-4 mb-4">Create a New Test</h1>
+
+    <div class="container mt-4">
+        <h1>Welcome, {{ request.user | capfirst }}!</h1>
+        <p>Here you can create tests, manage questions, and analyze student performance.</p>
+
+        <div class="row">
+            <!-- Sidebar with col-md-2 for responsive width -->
+            <div class="col-12 col-md-2">
+                <!-- Sidebar links go here -->
+            </div>
+
+            <!-- Create Test Form Section with col-md-10 -->
+            <div class="col-12 col-md-10 p-4 border rounded shadow-sm bg-light">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <!-- Title Input -->
+                    <div class="mb-3">
+                        <label for="title" class="form-label">Title:</label>
+                        <input type="text" id="title" name="title" class="form-control" required>
                     </div>
-                {% endfor %}
-            {% else %}
-                <p class="text-danger">No questions available to add.</p>
-            {% endif %}
+                    
+                    <!-- Description Textarea -->
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description:</label>
+                        <textarea id="description" name="description" class="form-control" rows="4" required></textarea>
+                    </div>
+                    
+                    <!-- Duration Input -->
+                    <div class="mb-3">
+                        <label for="duration" class="form-label">Duration (in minutes):</label>
+                        <input type="number" id="duration" name="duration" class="form-control" required>
+                        <small class="text-muted">Enter the duration in minutes.</small>
+                    </div>
+                    
+                    <!-- Pass Mark Input -->
+                    <div class="mb-3">
+                        <label for="pass_mark" class="form-label">Pass Mark:</label>
+                        <input type="number" id="pass_mark" name="pass_mark" class="form-control" required>
+                        <small class="text-muted">Pass percentage (e.g., 50 for 50%).</small>
+                    </div>
+                    
+                    <!-- Publish Checkbox -->
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_published" name="is_published" value="True">
+                        <label class="form-check-label" for="is_published">Publish Test</label>
+                    </div>
+
+                    <h4 class="mb-3">Add Questions to Test</h4>
+                    <div class="mb-3">
+                        {% if all_mcqs %}
+                            {% for mcq in all_mcqs %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="mcqs" value="{{ mcq.id }}" id="mcq-{{ mcq.id }}">
+                                    <label class="form-check-label" for="mcq-{{ mcq.id }}">
+                                        {{ mcq.question }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <p class="text-danger">No questions available to add.</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Form Buttons -->
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">Create Test</button>
+                    </div>
+                </form>
+            </div>
         </div>
-        
-        <!-- Order Input -->
-        <!-- <div class="mb-3">
-            <label for="order" class="form-label">Order:</label>
-            <input type="number" id="order" name="order" class="form-control" required>
-        </div> -->
-        
-        <!-- Form Buttons -->
-        <div class="d-flex justify-content-between">
-            <button type="submit" class="btn btn-primary">Create Test</button>
-            <a href="{% url 'manage_tests' %}" class="btn btn-secondary">Cancel</a>
-        </div>
-    </form>
+    </div>
 </div>
 {% endblock %}

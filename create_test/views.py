@@ -5,42 +5,54 @@ from .models import Test, TestMCQ, MCQ
 from question_bank.models import MCQ
 from .forms import TestForm, AddMCQToTestForm 
 
-@login_required 
+@login_required
 def create_test(request):
     """View for creating and managing a test"""
     if request.method == "POST":
-        test_form = TestForm(request.POST)
-        mcq_form = AddMCQToTestForm(request.POST)
-        
+        test_form = TestForm(request.POST)  # Form to create the test
+        mcqs_selected = request.POST.getlist('mcqs')  # Get the list of selected MCQs from the checkboxes
+
         if test_form.is_valid():
-            # Save test and link it to the logged-in teacher
+            # Debugging: Print the cleaned data for testing
+            print(test_form.cleaned_data)
+
+            # Save the test, but don't commit yet
             test = test_form.save(commit=False)
             test.teacher = request.user  # Assign the teacher to the created test
+
+            # Ensure 'is_published' is handled from the form
+            test.is_published = test_form.cleaned_data.get('is_published', False)
+
             test.save()  # Save the test
 
-            # Redirect to manage_tests after saving the test
+            # Now, associate the selected MCQs with the test using the TestMCQ model
+            for order, mcq_id in enumerate(mcqs_selected, start=1):
+                mcq = MCQ.objects.get(id=mcq_id)  # Fetch the MCQ by ID
+                TestMCQ.objects.create(test=test, mcq=mcq, order=order)  # Associate MCQs with the test
+
+            # Redirect to manage_tests after saving the test and its MCQs
             return redirect('manage_tests')  # Redirect to the manage_tests page
-        
         else:
-            return HttpResponse('Form is invalid', status=400)
+            return render(request, 'create_test/create_test.html', {
+                'test_form': test_form,
+                'error_message': "Form is invalid. Please correct the errors."
+            })
     
     else:
-        test_form = TestForm()
-        mcq_form = AddMCQToTestForm()
+        test_form = TestForm()  # Empty form for GET request
 
-    # Query all MCQs
+    # Query all MCQs to pass them to the template
     all_mcqs = MCQ.objects.all()
 
     return render(request, 'create_test/create_test.html', {
         'test_form': test_form,
-        'mcq_form': mcq_form,
         'all_mcqs': all_mcqs  # Pass the MCQs to the template
     })
 
 @login_required
 def manage_tests(request):
     tests = Test.objects.filter(teacher=request.user)
-    return render(request, 'create_test/manage_test.html', {'tests': tests})
+    return render(request, 'create_test/manage_tests.html', {'tests': tests})
 
 @login_required
 def add_mcqs_to_test(request, test_id):
@@ -68,7 +80,6 @@ def add_mcqs_to_test(request, test_id):
         'test': test
     })
 
-
 @login_required
 def edit_test(request, test_id):
     test = get_object_or_404(Test, id=test_id, teacher=request.user)
@@ -77,18 +88,31 @@ def edit_test(request, test_id):
     test_mcqs = TestMCQ.objects.filter(test=test).order_by('order')  # Order MCQs based on 'order'
 
     if request.method == 'POST':
-        form = TestForm(request.POST, instance=test)  # Use your Test form here
+        # Handle form submission for updating the test
+        form = TestForm(request.POST, instance=test)
         if form.is_valid():
-            form.save()
-            return redirect('manage_tests')  # Redirect to 'manage_tests' instead of 'edit_test' after saving
+            form.save()  # Save the updated test details
+            return redirect('manage_tests')  # Redirect to the manage_tests page after saving
+
+        # Handle MCQ deletion
+        if 'delete_mcq' in request.POST:
+            mcq_id = request.POST.get('mcq_id')  # Get the ID of the MCQ to delete
+            try:
+                test_mcq = TestMCQ.objects.get(id=mcq_id, test=test)  # Get the TestMCQ object
+                test_mcq.delete()  # Delete the TestMCQ object, which removes the MCQ from the test
+                return redirect('edit_test', test_id=test.id)  # Redirect to the same page to update the list
+            except TestMCQ.DoesNotExist:
+                pass  # Handle the case where the MCQ doesn't exist or can't be deleted
+
     else:
-        form = TestForm(instance=test)
+        form = TestForm(instance=test)  # Get the form for displaying the test details
 
     return render(request, 'create_test/edit_test.html', {
         'form': form,
         'test': test,
-        'test_mcqs': test_mcqs  # Pass the list of MCQs added to the test
+        'test_mcqs': test_mcqs  # Pass the list of MCQs associated with this test
     })
+
 
 @login_required
 def delete_test(request, test_id):

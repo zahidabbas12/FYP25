@@ -1,6 +1,7 @@
 from django.db import models
 from accounts.models import CustomUser
 from question_bank.models import MCQ
+from django.conf import settings 
 
 class Test(models.Model):
     teacher = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
