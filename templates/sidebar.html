@@ -1,0 +1,26 @@
+{% if user.role == 'teacher' or user.is_superuser %}
+<!-- Links for Teacher or Superuser -->
+<div class="list-group p-2 border rounded shadow-sm bg-light">
+    <a href="{% url 'add_question' %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Add Questions</a>
+    <a href="{% url 'manage_questions' %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Manage Questions</a>
+    <a href="{% url 'create_test' %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Add Tests</a>
+    <a href="{% url 'manage_tests' %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Manage Tests</a>
+    <a href="{% url 'performance_analytics:user_performance' user.id %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Attempted Tests</a>
+    <a href="{% url 'performance_analytics:visualize_performance' user.id %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Analyze Performance</a>
+</div>
+{% elif user.role == 'student' %}
+<div class="list-group p-2 mb-3 rounded shadow-sm bg-light">
+    <a href="{% url 'attempt_test:view_tests' %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Attempt Tests</a>
+    <a href="{% url 'performance_analytics:user_performance' user.id %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">My Performance</a>
+    <a href="{% url 'performance_analytics:visualize_performance' user.id %}"
+        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Analyze Performance</a>
+</div>
+{% endif %}

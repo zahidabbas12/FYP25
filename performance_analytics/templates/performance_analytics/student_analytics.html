@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="text-center mb-4">Performance Analytics - {{ student.username }}</h1>
+
+    <!-- Summary Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Attempts</h5>
+                    <p class="card-text display-4">{{ summary_stats.total_attempts }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Average Score</h5>
+                    <p class="card-text display-4">{{ summary_stats.avg_score|floatformat:1 }}%</p>
+                    <p class="card-text display-4">{{ average_score }}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Highest Score</h5>
+                    <p class="card-text display-4">{{ summary_stats.highest_score }}%</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Lowest Score</h5>
+                    <p class="card-text display-4">{{ summary_stats.lowest_score }}%</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plots -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Score Progress Over Time</h5>
+                    {{ timeline_plot|safe }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Average Scores by Test</h5>
+                    {{ avg_scores_plot|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Feedback Sentiment Distribution</h5>
+                    <p class="card-text text-muted">
+                        Shows how feedback sentiment (Positive/Neutral/Negative) correlates with test scores
+                    </p>
+                    {{ sentiment_plot|safe }}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Score Distribution</h5>
+                    {{ distribution_plot|safe }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <div class="mb-4">
+        <a href="{% url 'performance_analytics:visualize_performance' user_id=request.user.id %}" 
+           class="btn btn-secondary">Back to Overall Analytics</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %} 

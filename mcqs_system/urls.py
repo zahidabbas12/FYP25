@@ -1,8 +1,8 @@
 """
-URL configuration for mcqs_system project.
+URL configuration for mysite project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
+    https://docs.djangoproject.com/en/5.0/topics/http/urls/
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -16,12 +16,19 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from accounts import views
+from accounts import views 
+from accounts.views import home 
 
 urlpatterns = [
-    path('', views.home, name='home'),
     path('admin/', admin.site.urls),
-    path('accounts/', include('accounts.urls'), name='accounts'),
-    path('create/', include('create_test.urls'), name='create_test'),
-    path('manage/', include('question_bank.urls'), name='question_bank'),
+    path('', views.home, name='home'),  
+    path('dashboard/', views.redirect_dashboard, name='redirect_dashboard'), 
+    path('accounts/', include("accounts.urls"), name='accounts'),
+    path('create/', include("create_test.urls"), name='create_test'),  
+    path('question-bank/', include('question_bank.urls'), name='question_bank'),
+    path('attempt_test/', include('attempt_test.urls'), name='attempt_test'),
+    path('performance-analytics/', include('performance_analytics.urls')),
+    
+    
 ]
+

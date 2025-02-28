@@ -4,6 +4,9 @@ from django.contrib.auth.decorators import login_required
 from .models import Test, TestMCQ, MCQ
 from question_bank.models import MCQ
 from .forms import TestForm, AddMCQToTestForm 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
+
 
 @login_required
 def create_test(request):
@@ -46,13 +49,25 @@ def create_test(request):
 
     return render(request, 'create_test/create_test.html', {
         'test_form': test_form,
-        'all_mcqs': all_mcqs  # Pass the MCQs to the template
+        'all_mcqs': all_mcqs,  # Pass the MCQs to the template
+        'page_title': 'Create Tests - MCQ Test System'
     })
 
 @login_required
 def manage_tests(request):
+    # Get all tests related to the logged-in teacher
     tests = Test.objects.filter(teacher=request.user)
-    return render(request, 'create_test/manage_tests.html', {'tests': tests})
+
+    # Set up pagination (10 items per page)
+    paginator = Paginator(tests, 10)  # Show 10 tests per page
+    page_number = request.GET.get('page')  # Get current page number from query params
+    page_obj = paginator.get_page(page_number)
+
+    # Render the page with the paginated tests
+    return render(request, 'create_test/manage_tests.html', {
+        'page_obj': page_obj,  # Pass the paginated tests to the template
+        'page_title': 'Manage Tests- MCQ Test System'
+    })
 
 @login_required
 def add_mcqs_to_test(request, test_id):
@@ -77,7 +92,8 @@ def add_mcqs_to_test(request, test_id):
     return render(request, 'create_test/add_mcqs.html', {
         'form': form,
         'mcqs': mcqs,
-        'test': test
+        'test': test,
+        'page_title': 'Edit Test - MCQ Test System'
     })
 
 @login_required
@@ -110,7 +126,8 @@ def edit_test(request, test_id):
     return render(request, 'create_test/edit_test.html', {
         'form': form,
         'test': test,
-        'test_mcqs': test_mcqs  # Pass the list of MCQs associated with this test
+        'test_mcqs': test_mcqs,
+        'page_title': 'Edit Test - MCQ Test System'
     })
 
 
@@ -125,4 +142,4 @@ def delete_test(request, test_id):
         return redirect('manage_tests')  # Redirect to the tests list page
     else:
         # You can add a message or a response here to confirm it's being deleted
-        return redirect('manage_tests')
+        return redirect('manage_tests', {'page_title': 'Delete Test - MCQ Test System'})

@@ -1,9 +1,6 @@
 {% extends 'base.html' %}
-
-{% block title %}Register{% endblock %}
-
 {% block content %}
-<div class="container d-flex align-items-center justify-content-center" style="padding-top: 80px;">
+<div class="container vh-100 d-flex align-items-start justify-content-center pt-5">
     <div class="col-12 col-md-8 col-lg-6"> <!-- Adjust widths for different breakpoints -->
         <!-- Flash Messages -->
         {% if messages %}
@@ -47,7 +44,12 @@
             <!-- Password1 Field -->
             <div class="mb-3">
                 <label for="{{ form.password1.id_for_label }}" class="form-label">Password</label>
-                {{ form.password1|add_class:"form-control" }}
+                <div class="input-group">
+                    {{ form.password1|add_class:"form-control" }}
+                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
                 {% if form.password1.errors %}
                 <div class="text-danger small mt-1">
                     {{ form.password1.errors|join:", " }}
@@ -58,7 +60,12 @@
             <!-- Password2 Field -->
             <div class="mb-3">
                 <label for="{{ form.password2.id_for_label }}" class="form-label">Confirm Password</label>
-                {{ form.password2|add_class:"form-control" }}
+                <div class="input-group">
+                    {{ form.password2|add_class:"form-control" }}
+                    <button class="btn btn-outline-secondary toggle-password" type="button">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
                 {% if form.password2.errors %}
                 <div class="text-danger small mt-1">
                     {{ form.password2.errors|join:", " }}
@@ -78,8 +85,27 @@
             </div>
 
             <button type="submit" class="btn btn-primary w-100">Register</button>
-            <a href="{% url 'login' %}" class="btn-info btn-sm">Already have an accout</a>
+            <a href="{% url 'login' %}" class="d-block text-center mt-2">Already have an account?</a>
         </form>
     </div>
 </div>
+
+<script>
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function () {
+            let passwordField = this.previousElementSibling;
+            let icon = this.querySelector('i');
+
+            if (passwordField.type === "password") {
+                passwordField.type = "text";
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = "password";
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+    });
+</script>
 {% endblock %}

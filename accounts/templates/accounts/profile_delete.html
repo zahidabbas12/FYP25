@@ -1,13 +1,14 @@
 {% extends 'base.html' %}
-{% block title %}Delete Account{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
-    <h2>Are you sure you want to delete your account?</h2>
+    <h2>Delete Profile</h2>
+    
     <form method="post">
         {% csrf_token %}
-        <button type="submit" class="btn btn-danger">Yes, Delete My Account</button>
+        <p>Are you sure you want to delete your profile?</p>
+        <button type="submit" class="btn btn-danger">Delete Profile</button>
+        <a href="{% url 'profile_view' %}" class="btn btn-secondary">Cancel</a>
     </form>
-    <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary mt-2">Cancel</a>
-
 </div>
 {% endblock %}

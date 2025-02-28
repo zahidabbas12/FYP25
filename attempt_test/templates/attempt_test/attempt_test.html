@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Title and Progress -->
+    <div class="text-center mb-5">
+        <h2 class="text-primary">{{ test.title }}</h2>
+        <h4 class="text-secondary">Question {{ current_question_index }} of {{ total_questions }}</h4>
+
+        <!-- Timer Display -->
+        <div class="text-right">
+            <div class="alert alert-info p-2" role="alert" style="font-size: 1rem;">
+                Time Remaining: <span id="timer" class="font-weight-bold">Loading...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form for Test Question -->
+    <form method="POST" id="questionForm" class="card p-4 shadow-lg rounded-lg bg-light border-0">
+        {% csrf_token %}
+        <input type="hidden" name="time_expired" id="timeExpired" value="false">
+        
+        <h4 class="mb-4">{{ question.question }}</h4>
+        <hr>
+
+        <!-- Answer Options -->
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" id="A" name="selected_option" value="A">
+            <label class="form-check-label" for="A">{{ question.option_a }}</label>
+        </div>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" id="B" name="selected_option" value="B">
+            <label class="form-check-label" for="B">{{ question.option_b }}</label>
+        </div>
+
+        <div class="form-check mb-3">
+            <input class="form-check-input" type="radio" id="C" name="selected_option" value="C">
+            <label class="form-check-label" for="C">{{ question.option_c }}</label>
+        </div>
+
+        <div class="form-check mb-4">
+            <input class="form-check-input" type="radio" id="D" name="selected_option" value="D">
+            <label class="form-check-label" for="D">{{ question.option_d }}</label>
+        </div>
+
+        {% if error_message %}
+            <div class="alert alert-danger mt-3">{{ error_message }}</div>
+        {% endif %}
+
+        <!-- Next Button -->
+        <div class="text-center mt-4">
+            <button type="submit" class="btn btn-primary btn-lg px-3 py-1">Next Question</button>
+        </div>
+    </form>
+
+    <!-- Finish Test Button -->
+    <div class="text-center mt-4">
+        <button type="button" class="btn btn-danger btn-sm px-4 py-1" onclick="confirmFinishTest()">Finish Test</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Get the remaining seconds from Django context
+        const initialSeconds = parseInt("{{ remaining_seconds }}");
+        console.log("Initial seconds:", initialSeconds); // Debug log
+        
+        let remainingSeconds = initialSeconds;
+        const timerDisplay = document.getElementById('timer');
+        const questionForm = document.getElementById('questionForm');
+        const timeExpiredInput = document.getElementById('timeExpired');
+
+        function formatTime(seconds) {
+            const minutes = Math.floor(seconds / 60);
+            const remainingSecs = seconds % 60;
+            return `${minutes}:${remainingSecs.toString().padStart(2, '0')}`;
+        }
+
+        function updateTimer() {
+            if (remainingSeconds <= 0) {
+                clearInterval(timerInterval);
+                timerDisplay.textContent = '0:00';
+                timeExpiredInput.value = 'true';
+                alert('Time is up! Submitting test...');
+                questionForm.submit();
+                return;
+            }
+
+            timerDisplay.textContent = formatTime(remainingSeconds);
+            remainingSeconds--;
+        }
+
+        // Start the timer only if we have valid remaining seconds
+        if (!isNaN(initialSeconds) && initialSeconds > 0) {
+            // Set initial display
+            timerDisplay.textContent = formatTime(remainingSeconds);
+            // Start the interval
+            const timerInterval = setInterval(updateTimer, 1000);
+
+            // Clean up interval when leaving the page
+            window.addEventListener('beforeunload', function() {
+                clearInterval(timerInterval);
+            });
+        } else {
+            timerDisplay.textContent = 'Timer Error';
+            console.error('Invalid remaining seconds:', initialSeconds);
+        }
+    });
+
+    function confirmFinishTest() {
+        if (confirm("Are you sure you want to finish the test? This action cannot be undone.")) {
+            document.getElementById('timeExpired').value = 'true';
+            document.getElementById('questionForm').submit();
+        }
+    }
+</script>
+{% endblock %}

@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from django.conf import settings
+import os 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -39,8 +41,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'create_test',
+    'attempt_test',
+    'performance_analytics',
     'question_bank',
     'widget_tweaks',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -82,9 +87,14 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'mcqs_db',
         'USER': 'root',
-        'PASSWORD': 'Mysql1234za.',
+        'PASSWORD': 'Mysql1234za.', 
         'HOST': 'localhost',
         'PORT': '3306',
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'use_unicode': True,
+            'init_command': "SET NAMES utf8mb4 COLLATE utf8mb4_unicode_ci",
+        },
     }
 }
 
@@ -130,19 +140,26 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-AUTH_USER_MODEL = 'accounts.CustomUser'
-STATICFILES_DIRS = [BASE_DIR, 'static']
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-LOGIN_REDIRECT_URL = '/accounts/redirect_dashboard/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
-MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
+AUTH_USER_MODEL = 'accounts.CustomUser'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+# Static files (CSS, JavaScript, Images) 
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Media files
+MEDIA_URL = '/media/'  # URL for media files
+MEDIA_ROOT = BASE_DIR / 'media'  # Directory where files will be stored
+
+# Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
-STATIC_URL = '/static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
-# LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/accounts/redirect_dashboard/'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Message storage configuration
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'

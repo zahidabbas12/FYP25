@@ -2,70 +2,76 @@
 
 {% block content %}
 <div class="container-fluid">
-    <h1 class="text-center mt-4 mb-4">Add Questions</h1> 
+    <h1 class="text-center mt-4 mb-4">Add Questions</h1>
 
     <div class="container mt-4">
-        <h1>Welcome, {{ request.user | capfirst }}!</h1>
-        <p>Here you can create questions, tests, and manage the question bank, view students' progress, and analyze their performance.</p>
+        <!-- <h1>Welcome, {{ request.user | capfirst }}!</h1>
+        <p>Here you can create questions, tests, and manage the question bank, view students' progress, and analyze their performance.</p> -->
 
         <div class="row">
             <!-- Sidebar with col-md-2 for responsive width -->
-            <div class="col-12 col-md-2">
-                <a href="{% url 'add_question' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Add Questions</a>
-                <a href="{% url 'manage_questions' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Manage Questions</a>
-                <a href="{% url 'create_test' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Add Tests</a>
-                <a href="{% url 'manage_tests' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Manage Tests</a>
-                <a href="{% url 'teacher_dashboard' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Analyze Performance</a>
-                <a href="{% url 'teacher_dashboard' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Give Feedback</a>
+            <div class="col-12 col-md-3">
+                {% include 'sidebar.html' %}
             </div>
 
             <!-- Add Question Form Section with col-md-10 -->
-            <div class="col-12 col-md-10 p-4 border rounded shadow-sm bg-light">
-                        {% if request.user.role == 'teacher' or request.user.is_superuser %}
-                        <form method="post">
-                            {% csrf_token %}
-                            
-                            <div class="mb-3">
-                                <label for="question" class="form-label">Question</label>
-                                <input type="text" class="form-control" id="question" name="question" required>
-                            </div>
-                            
-                            <div class="mb-3">
+            <div class="col-12 col-md-9 p-4 border rounded shadow-sm bg-light">
+                <div>
+                    {% if request.user.role == 'teacher' or request.user.is_superuser %}
+                    <form method="post">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="question" class="form-label">Question</label>
+                            <input type="text" class="form-control" id="question" name="question" required>
+                        </div>
+
+                        <div class="row">
+                            <!-- Option A -->
+                            <div class="col-md-6 mb-3">
                                 <label for="option_a" class="form-label">Option A</label>
                                 <input type="text" class="form-control" id="option_a" name="option_a" required>
                             </div>
-                            
-                            <div class="mb-3">
+
+                            <!-- Option B -->
+                            <div class="col-md-6 mb-3">
                                 <label for="option_b" class="form-label">Option B</label>
                                 <input type="text" class="form-control" id="option_b" name="option_b" required>
                             </div>
-                            
-                            <div class="mb-3">
+                        </div>
+
+                        <div class="row">
+                            <!-- Option C -->
+                            <div class="col-md-6 mb-3">
                                 <label for="option_c" class="form-label">Option C</label>
                                 <input type="text" class="form-control" id="option_c" name="option_c" required>
                             </div>
-                            
-                            <div class="mb-3">
+
+                            <!-- Option D -->
+                            <div class="col-md-6 mb-3">
                                 <label for="option_d" class="form-label">Option D</label>
                                 <input type="text" class="form-control" id="option_d" name="option_d" required>
                             </div>
-                            
-                            <div class="mb-3">
-                                <label for="correct_answer" class="form-label">Correct Answer</label>
-                                <select id="correct_answer" name="correct_answer" class="form-select" required>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="C">C</option>
-                                    <option value="D">D</option>
-                                </select>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="explanation" class="form-label">Explanation</label>
-                                <textarea class="form-control" id="explanation" name="explanation" rows="3" required></textarea>
-                            </div>
-                            
-                            <div class="mb-3">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="correct_answer" class="form-label">Correct Answer</label>
+                            <select id="correct_answer" name="correct_answer" class="form-select" required>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="C">C</option>
+                                <option value="D">D</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="explanation" class="form-label">Explanation</label>
+                            <textarea class="form-control" id="explanation" name="explanation" rows="3" required></textarea>
+                        </div>
+
+                        <div class="row">
+                            <!-- Difficulty -->
+                            <div class="col-md-6 mb-3">
                                 <label for="difficulty" class="form-label">Difficulty</label>
                                 <select class="form-select" name="difficulty" id="difficulty" required>
                                     <option value="easy">Easy</option>
@@ -73,28 +79,29 @@
                                     <option value="hard">Hard</option>
                                 </select>
                             </div>
-                            
-                            <div class="mb-3">
+
+                            <!-- Category -->
+                            <div class="col-md-6 mb-3">
                                 <label for="category" class="form-label">Category</label>
-                                <select class="form-select" name="category" id="category" required>
-                                    <option value="Math">Math</option>
-                                    <option value="Science">Science</option>
-                                    <option value="English">English</option>
-                                    <option value="Literature">Literature</option>
-                                    <option value="History">History</option>
-                                    <option value="Web Dev">Web Dev</option>
+                                <select name="category" class="form-control" required>
+                                    <option value="">Select Category</option>
+                                    {% for code, name in categories %}
+                                    <option value="{{ code }}">{{ name }}</option>
+                                    {% endfor %}
                                 </select>
                             </div>
-                            
-                            <div class="d-flex justify-content-between">
-                                <button type="submit" class="btn btn-primary">Add Question</button>
-                                <!-- <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Cancel</a> -->
-                            </div>
-                        </form>
-                        
-                        {% else %}
-                        <p class="text-danger text-center">You do not have permission to add questions.</p>
-                        {% endif %}
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Save</button>
+                            <!-- <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Cancel</a> -->
+                        </div>
+                    </form>
+
+                    {% else %}
+                    <p class="text-danger text-center">You do not have permission to add questions.</p>
+                    {% endif %}
+                </div>
             </div>
         </div>
     </div>

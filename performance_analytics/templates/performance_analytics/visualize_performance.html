@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <h1 class="text-center mt-4 mb-4">Performance Analytics Dashboard</h1>
+
+    <div class="row">
+        <!-- Sidebar with responsive width -->
+        <div class="col-12 col-md-3">
+            {% include 'sidebar.html' %}
+        </div>
+
+        <!-- Main content area -->
+        <div class="col-12 col-md-9 p-4 border rounded shadow-sm bg-light">
+            <!-- Summary Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Total Attempts</h5>
+                            <p class="card-text display-4">{{ summary_stats.total_attempts }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Average Score</h5>
+                            <p class="card-text display-4">{{ summary_stats.avg_score|floatformat:1 }}%</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Highest Score</h5>
+                            <p class="card-text display-4">{{ summary_stats.highest_score }}%</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Lowest Score</h5>
+                            <p class="card-text display-4">{{ summary_stats.lowest_score }}%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Plots -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Score Progress Over Time</h5>
+                            {{ timeline_plot|safe }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Average Scores by Test</h5>
+                            {{ avg_scores_plot|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Feedback Sentiment Analysis</h5>
+                            {{ sentiment_plot|safe }}
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Score Distribution</h5>
+                            {{ distribution_plot|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Performance Table -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Detailed Performance Data</h5>
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Test Name</th>
+                                    <th>Score</th>
+                                    <th>Student</th>
+                                    <th>Feedback Sentiment</th>
+                                    <th>Time Taken</th> <!-- Added Time Taken column -->
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in performance_data %}
+                                <tr>
+                                    <td>{{ data.date }}</td>
+                                    <td>{{ data.test_name }}</td>
+                                    <td>{{ data.score }}%</td>
+                                    <td>
+                                        {% if request.user.role == 'teacher' or request.user.is_superuser %}
+                                        <a
+                                            href="{% url 'performance_analytics:student_analytics' student_id=data.student_id %}">
+                                            {{ data.student }}
+                                        </a>
+                                        {% else %}
+                                        {{ data.student }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="{{ data.sentiment.class }}">
+                                            {{ data.sentiment.label }}
+                                            <i class="fas fa-circle-info" data-bs-toggle="tooltip" data-bs-placement="top"
+                                                title="Sentiment Score: {{ data.sentiment_score|floatformat:2 }}">
+                                            </i>
+                                        </span>
+                                    </td>
+                                    <td>{{ data.time_taken }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+{% endblock %}

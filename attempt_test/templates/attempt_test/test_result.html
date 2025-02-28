@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+
+    <!-- Title Section -->
+    <h2 class="text-center mb-4 text-primary">Test Result</h2>
+
+    <!-- Test Score Card -->
+    <div class="card p-4 mb-4 shadow-lg bg-light rounded-lg">
+        <div class="text-center">
+            <p class="lead mb-3">
+                <strong>Your score:</strong>
+                <span class="display-4 text-primary">{{ score }} out of {{ total_questions }}</span>
+                <span class="h5 text-muted">({{ percentage|floatformat:1 }}%)</span>
+            </p>
+            <p class="lead">
+                <strong>Time taken:</strong>
+                <span class="text-info">{{ time_taken }}</span>
+            </p>
+        </div>
+    </div>
+
+    <!-- Pass/Fail Status -->
+    <div class="text-center mb-4">
+        {% if percentage >= test_attempt.test.pass_mark %}
+        <div class="alert alert-success" role="alert">
+            <h4 class="alert-heading">Congratulations! 🎉</h4>
+            <p>You have passed the test!</p>
+        </div>
+        {% else %}
+        <div class="alert alert-danger" role="alert">
+            <h4 class="alert-heading">Keep trying! 💪</h4>
+            <p>You need {{ test_attempt.test.pass_mark }}% to pass this test.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Answers Review Section -->
+    <h4 class="mb-3 text-secondary">Answers Review:</h4>
+    <ul class="list-group mb-4">
+        {% for qa in question_attempts %}
+        <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ qa.question.question }}</strong>
+            </div>
+
+            <div class="d-flex flex-column text-center">
+                <div>
+                    <strong>Your answer was :</strong>
+                    {% if qa.selected_option == qa.question.correct_answer %}
+                    <span class="badge bg-success">{{ qa.selected_option }}</span> <!-- Correct answer -->
+                    {% else %}
+                    <span class="badge bg-danger">{{ qa.selected_option }}</span> <!-- Incorrect answer -->
+                    {% endif %}
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <strong>Correct answer is:</strong>
+                    <span class="badge bg-primary mx-2">{{ qa.question.correct_answer }}</span> <!-- Correct answer -->
+                </div>
+
+                <!-- Show Explanation Button -->
+                <div class="">
+                    <button class="btn btn-link" data-bs-toggle="collapse" data-bs-target="#explanation-{{ qa.id }}">
+                        Show Explanation
+                    </button>
+
+                    <!-- Explanation Section -->
+                    <div id="explanation-{{ qa.id }}" class="collapse mt-1">
+                        <p>{{ qa.question.explanation }}</p>
+                    </div>
+                </div>
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+
+    <!-- Buttons to go to Home or Attempt another test -->
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'student_dashboard' %}" class="btn btn-sm btn-primary w-48 shadow-lg rounded">Go to Home</a>
+        <a href="{% url 'attempt_test:view_tests' %}" class="btn btn-sm btn-secondary w-48 shadow-lg rounded">Attempt
+            Another Test</a>
+    </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,24 @@
+
+<h1>Overall Performance</h1>
+<table border="1">
+    <thead>
+        <tr>
+            <th>Student</th>
+            <th>Test Name</th>
+            <th>Score</th>
+            <th>Percentage</th>
+            <th>Attempt Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for performance in performance_data %}
+        <tr>
+            <td>{{ performance.student.username }}</td>
+            <td>{{ performance.test.test.name }}</td>
+            <td>{{ performance.score }}</td>
+            <td>{{ performance.percentage|floatformat:2 }}%</td>
+            <td>{{ performance.attempt_date }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>

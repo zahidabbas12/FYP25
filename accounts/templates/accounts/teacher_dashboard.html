@@ -1,6 +1,4 @@
-{% extends 'base.html' %} 
-
-{% block title %} {{ request.user | capfirst }}'s Dashboard{% endblock %}
+{% extends 'base.html' %}
 
 {% block content %}
 <div class="container mt-4">
@@ -16,25 +14,83 @@
     </div>
     {% endif %}
 
-    <h1>Welcome, {{ request.user | capfirst }}!</h1>
-    <p>Here you can create questions, tests, and manage the question bank, view students' progress, and analyze their performance.</p>
+    <h1 class="display-4 text-primary">Welcome, {{ request.user | capfirst }}!</h1>
+    <p class="lead">
+        Here you can create questions, tests, manage the questions, view students' progress, and analyze their performance.
+    </p>
 
     <div class="row">
-        <!-- Sidebar with responsive width -->
         <div class="col-12 col-md-3">
-            <a href="{% url 'add_question' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Add Questions</a>
-            <a href="{% url 'manage_questions' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Manage Questions</a>
-            <a href="{% url 'create_test' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Add Tests</a>
-            <a href="{% url 'manage_tests' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Manage Tests</a>
-            <a href="{% url 'teacher_dashboard' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Analyze Performance</a>
-            <a href="{% url 'teacher_dashboard' %}" class="text-decoration-none mb-2 d-block bg-light p-2 rounded">Give Feedback</a>
+            {% include 'sidebar.html' %}
         </div>
-
         <!-- Main content -->
-        <div class="col-12 col-md-9">
-            <h4>Total Registered Students: {{ total_students }}</h4>
-            <h4>Total Tests Created: {{ total_tests }}</h4>
-            <h4>Total Questions Created: {{ total_questions }}</h4>
+        <div class="col-12 col-md-9 p-4 border rounded shadow-sm bg-light">
+            <div class="row"><!-- Card for Total Registered Students -->
+                <div class="col-12 col-md-4 mb-3">
+                    <div class="card h-100 d-flex align-items-stretch">
+                        <div class="card-body">
+                            <h4>Total Registered Students:</h4>
+                            <h5><span class="text-muted font-weight-bold">{{ total_students }}</span></h5>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card for Total Tests Created -->
+                <div class="col-12 col-md-4 mb-3">
+                    <div class="card h-100 d-flex align-items-stretch">
+                        <div class="card-body">
+                            <h4>Total Tests Created:</h4>
+                            <h5><span class="text-muted font-weight-bold">{{ total_tests }}</span></h5>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Card for Total Questions Created -->
+                <div class="col-12 col-md-4 mb-3">
+                    <div class="card h-100 d-flex align-items-stretch">
+                        <div class="card-body">
+                            <h4>Total Questions Created:</h4>
+                            <h5><span class="text-muted font-weight-bold">{{ total_questions }}</span></h5>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Display List of Students with Enhanced Information -->
+                <div class="card p-4 mt-4">
+                    <h4 class="mb-4">Students Performance Overview</h4>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student Name</th>
+                                    <th>Tests Attempted</th>
+                                    <th>Average Score</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in students_data %}
+                                <tr>
+                                    <td>{{ data.student.username | capfirst }}</td>
+                                    <td>{{ data.total_attempts }}</td>
+                                    <td>{{ data.avg_score }}%</td>
+                                    <td>
+                                        <a href="{% url 'performance_analytics:student_analytics' student_id=data.student.id %}" 
+                                           class="btn btn-sm btn-primary">
+                                            View Analytics
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No students found.</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>

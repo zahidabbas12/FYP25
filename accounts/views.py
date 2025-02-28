@@ -12,6 +12,7 @@ from django.core.exceptions import PermissionDenied
 from create_test.models import Test
 from question_bank.models import MCQ
 from create_test import views
+from django.db.models import Avg
 
 
 def home(request):
@@ -39,7 +40,7 @@ def register(request):
             messages.error(request, "There was an error with your registration. Please correct the highlighted fields.")
     else:
         form = CustomUserCreationForm()
-    return render(request, 'accounts/register.html', {'form': form})
+    return render(request, 'accounts/register.html', {'form': form, 'page_title': 'Register - MCQ Test System'})
 
 def login_view(request):
     form = AuthenticationForm(data=request.POST or None)
@@ -50,7 +51,7 @@ def login_view(request):
         return redirect('redirect_dashboard')
     elif request.method == 'POST':
         messages.error(request, "Invalid username or password. Please try again.")
-    return render(request, 'accounts/login.html', {'form': form})
+    return render(request, 'accounts/login.html', {'form': form, 'page_title': 'Login- MCQ Test System'})
 
 def logout_view(request):
     logout(request)  
@@ -59,13 +60,38 @@ def logout_view(request):
 
 @login_required
 def teacher_dashboard(request):
+    if not (request.user.role == 'teacher' or request.user.is_superuser):
+        return redirect('home')
+
+    # Get the total number of registered students
     total_students = CustomUser.objects.filter(role='student').count()
+
+    # Fetch all registered students with their test attempts
+    students = CustomUser.objects.filter(role='student').prefetch_related('testattempt_set')
+
+    # Fetch the total number of tests and questions created by the teacher
     total_tests = Test.objects.filter(teacher=request.user).count()
     total_questions = MCQ.objects.filter(teacher=request.user).count()
+
+    # Calculate some statistics for each student
+    students_data = []
+    for student in students:
+        test_attempts = student.testattempt_set.all()
+        avg_score = test_attempts.aggregate(Avg('score'))['score__avg'] or 0
+        students_data.append({
+            'student': student,
+            'total_attempts': test_attempts.count(),
+            'avg_score': round(avg_score, 2),
+            
+        })
+
+    # Pass the enhanced context to the template
     return render(request, 'accounts/teacher_dashboard.html', {
         'total_students': total_students,
+        'students_data': students_data,
         'total_tests': total_tests,
-        'total_questions': total_questions
+        'total_questions': total_questions,
+        'page_title': f"{ request.user }'s Dashboard - MCQ Test System",
     })
 
 
@@ -76,8 +102,7 @@ def student_dashboard(request):
 @login_required
 def profile_view(request):
     user = request.user
-    # Additional user data can be added like 'subjects' and 'test attempts' by querying related models.
-    return render(request, 'accounts/profile_view.html', {'user': user})
+    return render(request, 'accounts/profile_view.html', {'user': user, 'page_title': f"{user.username}'s Profile - MCQ Test System"})
 
 @login_required
 def profile_edit(request):
@@ -85,11 +110,12 @@ def profile_edit(request):
         form = ProfileEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             form.save()
-            return redirect('profile_view')  # Redirect to the profile view after saving
+            messages.success(request, "Your profile has been updated successfully!")
+            return redirect('profile_view')
     else:
         form = ProfileEditForm(instance=request.user)
     
-    return render(request, 'accounts/profile_edit.html', {'form': form})
+    return render(request, 'accounts/profile_edit.html', {'form': form, 'page_title': 'Edit Profile - MCQ Test System'})
 
 @login_required
 def profile_delete(request):
@@ -98,4 +124,7 @@ def profile_delete(request):
         user.delete()
         messages.success(request, "Your account has been deleted successfully.")
         return redirect('login')
-    return render(request, 'accounts/profile_delete.html')
+    context = {
+        'page_title': 'Delete Profile - MCQ Test System'
+    }
+    return render(request, 'accounts/profile_delete.html', context)

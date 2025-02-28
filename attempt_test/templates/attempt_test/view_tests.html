@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="text-center mt-4 mb-4">Available Tests</h1>
+    <div class="row">
+        <!-- Sidebar with col-md-3 -->
+        <div class="col-12 col-md-2">
+            {% include 'sidebar.html' %}
+        </div>
+
+        <!-- Main Content with col-md-9 -->
+        <div class="col-12 col-md-10 p-4 border rounded shadow-sm bg-light">
+
+            {% if tests %}
+            <!-- List of Tests -->
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                {% for test in tests %}
+                <div class="col">
+                    <div class="card shadow-sm border-light rounded-lg">
+                        <div class="card-body">
+                            <h5 class="card-title text-center text-dark">{{ test.title }}</h5>
+                            <p class="card-text text-muted text-center">Ready to start your test?</p>
+                            <div class="d-flex justify-content-center">
+                                <a href="{% url 'attempt_test:attempt_test' test.id 1 %}"
+                                    class="btn btn-primary btn-md w-75">
+                                    Start Test
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- No Tests Available -->
+            <div class="alert alert-warning text-center" role="alert">
+                No tests available at the moment. Please check back later.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

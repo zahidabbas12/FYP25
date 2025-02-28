@@ -11,7 +11,7 @@ class MCQ(models.Model):
         ('Algorithms', 'Algorithms'),
         ('Computer Science', 'Computer Science'),
         ('Web Development', 'Web Development'),
-
+        ('Other', 'Other'),
     ]
     
     teacher = models.ForeignKey(CustomUser, on_delete=models.CASCADE)  # Reference to teacher

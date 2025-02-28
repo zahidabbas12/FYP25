@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Test Details</h2>
+
+    <!-- Test Information -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">{{ test_attempt.test.title }}</h5>
+            <p class="card-text"><strong>Score:</strong> {{ test_attempt.score }}%</p>
+            <p class="card-text"><strong>Date:</strong> {{ test_attempt.attempt_date }}</p>
+            <p class="card-text"><strong>Student:</strong> {{ test_attempt.user.username | capfirst }}</p>
+            <p class="card-text"><strong>Total Questions:</strong> {{ test_attempt.test.test_mcqs.count }}</p>
+            <!-- <p class="card-text"><strong>Correct Answers:</strong> {{ test_attempt.correct_answers }}</p>
+            <p class="card-text"><strong>Incorrect Answers:</strong> {{ test_attempt.incorrect_answers }}</p> -->
+        </div>
+    </div>
+
+    <!-- Statistics Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Test Statistics</h5>
+            <p class="card-text"><strong>Total Attempts:</strong> {{ total_attempts }}</p>
+            <p class="card-text"><strong>Average Score:</strong> {{ average_score }}%</p>
+            <p class="card-text"><strong>Attempts with Feedback:</strong> {{ tests_with_feedback }}</p>
+        </div>
+    </div>
+
+    <!-- Feedback Section -->
+    {% if feedback %}
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Feedback</h5>
+            <p class="card-text">{{ feedback.content }}</p>
+            <p class="card-text"><small class="text-muted">By: {{ feedback.teacher.username }}</small></p>
+
+            <!-- Feedback Edit and Delete Buttons -->
+            {% if test_attempt.feedback.teacher == request.user %}
+            <div class="d-flex justify-content-start mt-3">
+                <a href="{% url 'performance_analytics:update_feedback' test_attempt_id=test_attempt.id %}"
+                   class="btn btn-warning btn-sm me-2">Edit Feedback</a>
+                <form action="{% url 'performance_analytics:delete_feedback' test_attempt_id=test_attempt.id %}" method="post"
+                      style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger btn-sm"
+                            onclick="return confirm('Are you sure you want to delete this feedback?')">Delete Feedback</button>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+    <p>No feedback yet.</p>
+    {% if request.user.is_staff %}
+    <a href="{% url 'performance_analytics:create_feedback' test_attempt_id=test_attempt.id %}" class="btn btn-primary mt-2">Provide Feedback</a>
+    {% endif %}
+    {% endif %}
+
+    <!-- Back Button -->
+    <div class="mt-4">
+        <a href="{% url 'performance_analytics:user_performance' user_id=request.user.id %}" class="btn btn-secondary">Back to Performance</a>
+    </div>
+
+</div>
+{% endblock %}
