@@ -8,3 +8,9 @@ class FeedbackForm(forms.ModelForm):
         widgets = {
             'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 4, 'cols': 50}),
         }
+
+    def save(self, commit=True):
+        feedback = super().save(commit=False)
+        if commit:
+            feedback.save()
+        return feedback

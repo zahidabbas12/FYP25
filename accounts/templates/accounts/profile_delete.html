@@ -1,14 +1,62 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Delete Profile</h2>
-    
-    <form method="post">
-        {% csrf_token %}
-        <p>Are you sure you want to delete your profile?</p>
-        <button type="submit" class="btn btn-danger">Delete Profile</button>
-        <a href="{% url 'profile_view' %}" class="btn btn-secondary">Cancel</a>
-    </form>
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body p-4">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-exclamation-triangle text-warning fa-3x"></i>
+                        <h2 class="mt-3">Delete Profile</h2>
+                        <p class="text-muted">This action cannot be undone</p>
+                    </div>
+
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-circle me-2"></i>Warning
+                        </h5>
+                        <p class="mb-0">Deleting your profile will:</p>
+                        <ul class="mb-0">
+                            <li>Remove all your personal information</li>
+                            <li>Delete all your test attempts and results</li>
+                            <li>Remove access to all your created content</li>
+                        </ul>
+                    </div>
+
+                    <form method="post" class="text-center">
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label class="form-label">Type "DELETE" to confirm:</label>
+                            <input type="text" 
+                                   class="form-control text-center" 
+                                   id="confirmDelete" 
+                                   required 
+                                   pattern="DELETE"
+                                   placeholder="Type DELETE">
+                        </div>
+                        
+                        <div class="d-flex justify-content-center gap-2">
+                            <button type="submit" 
+                                    class="btn btn-danger" 
+                                    id="deleteButton" 
+                                    disabled>
+                                <i class="fas fa-trash-alt me-2"></i>Delete Profile
+                            </button>
+                            <a href="{% url 'profile_view' %}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
+
+<script>
+document.getElementById('confirmDelete').addEventListener('input', function() {
+    document.getElementById('deleteButton').disabled = this.value !== 'DELETE';
+});
+</script>
 {% endblock %}

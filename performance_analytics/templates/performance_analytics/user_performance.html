@@ -1,83 +1,213 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="text-center mt-4 mb-4">Test Attempted</h1>
-    <div class="container mt-4">
-        <div class="row">
-            <!-- Sidebar with responsive width -->
-            <div class="col-12 col-md-3">
-                {% include 'sidebar.html' %}
-            </div>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 text-center">Feedbacks</h1>
+            <p class="text-muted text-center">Track progress and performance</p>
+        </div>
+    </div>
 
-            <!-- Main content: Test Performance -->
-            <div class="col-12 col-md-9 border rounded shadow-sm bg-light p-4">
-                {% if page_obj %}
-                <ul class="list-group">
-                    {% for attempt in page_obj %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                        <div>
-                            <strong>Test:</strong> {{ attempt.test }}<br>
-                            <strong>Student:</strong> {{ attempt.user.username | capfirst }} 
-                            <!-- Feedback Indicator -->
-                            {% if attempt.feedback %}
-                                <span class="text-success ms-2" data-bs-toggle="tooltip" data-bs-placement="top" title="Feedback provided">
-                                    <i class="bi bi-check-circle"></i> <!-- Bootstrap icon for check-circle -->
-                                </span>
-                            {% else %}
-                                <span class="text-muted ms-2" data-bs-toggle="tooltip" data-bs-placement="top" title="No feedback provided">
-                                    <i class="bi bi-x-circle"></i> <!-- Bootstrap icon for x-circle -->
-                                </span>
-                            {% endif %}
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-12 col-md-3 mb-4">
+            {% include 'sidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-12 col-md-9">
+            <!-- Search and Filter Controls -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <div class="input-group">
+                                <input type="text" 
+                                       class="form-control" 
+                                       name="search" 
+                                       placeholder="Search..." 
+                                       value="{{ search_query }}">
+                                <button class="btn btn-outline-primary" type="submit">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
                         </div>
-                        <a href="{% url 'performance_analytics:test_details' test_attempt_id=attempt.id %}" 
-                           class="btn btn-sm btn-info mt-2">View Details</a>
-                    </li>
-                    {% endfor %}
-                </ul>
-                
-                <!-- Pagination controls -->
-                <div class="mt-2">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
-                            {% if page_obj.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1" aria-label="First">
-                                    <span aria-hidden="true">&laquo;&laquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
-                            {% endif %}
-
-                            <li class="page-item disabled">
-                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-                            </li>
-
-                            {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                                    <span aria-hidden="true">&raquo;&raquo;</span>
-                                </a>
-                            </li>
-                            {% endif %}
-                        </ul>
-                    </nav>
+                        <div class="col-md-3">
+                            <select class="form-select" name="filter_by">
+                                <option value="">Search in...</option>
+                                <option value="test" {% if filter_by == 'test' %}selected{% endif %}>Test Name</option>
+                                <option value="student" {% if filter_by == 'student' %}selected{% endif %}>Student Name</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select class="form-select" name="status">
+                                <option value="">All Status</option>
+                                <option value="passed" {% if status_filter == 'passed' %}selected{% endif %}>Passed</option>
+                                <option value="failed" {% if status_filter == 'failed' %}selected{% endif %}>Failed</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Feedback</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-filter me-2"></i>Apply
+                            </button>
+                        </div>
+                    </form>
                 </div>
-
-                {% else %}
-                <p>No performance data available.</p>
-                {% endif %}
             </div>
+
+            {% if page_obj %}
+                <!-- Test Results -->
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Test Name</th>
+                                        <th>Student</th>
+                                        <th>Date</th>
+                                        <th>Score</th>
+                                        <th>Status</th>
+                                        <th>Feedback</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for attempt in page_obj %}
+                                    <tr>
+                                        <td>{{ attempt.test.title }}</td>
+                                        <td>{{ attempt.user.username }}</td>
+                                        <td>{{ attempt.attempt_date|date:"M d, Y" }}</td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar {% if attempt.percentage >= attempt.test.pass_mark %}bg-success{% elif attempt.percentage >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ attempt.percentage }}%">
+                                                    {{ attempt.percentage|floatformat:1 }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if attempt.percentage >= attempt.test.pass_mark %}
+                                                <span class="badge bg-success">Passed</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Failed</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if attempt.feedback %}
+                                                <div class="d-flex align-items-center">
+                                                    <span class="text-success me-2">
+                                                        <i class="fas fa-check-circle"></i>
+                                                    </span>
+                                                    <div>
+                                                        <small class="text-muted">Provided by: {{ attempt.feedback.teacher.username }}</small>
+                                                        <br>
+                                                        <small>{{ attempt.feedback.feedback_text|truncatechars:50 }}</small>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">
+                                                    <i class="fas fa-clock"></i> Pending
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'performance_analytics:test_details' test_attempt_id=attempt.id %}" 
+                                                   class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye me-1"></i>View
+                                                </a>
+                                                {% if is_teacher and not attempt.feedback %}
+                                                <a href="{% url 'performance_analytics:create_feedback' test_attempt_id=attempt.id %}" 
+                                                   class="btn btn-sm btn-outline-success">
+                                                    <i class="fas fa-comment me-1"></i>Feedback
+                                                </a>
+                                                {% elif is_teacher and attempt.feedback %}
+                                                <a href="{% url 'performance_analytics:update_feedback' test_attempt_id=attempt.id %}" 
+                                                   class="btn btn-sm btn-outline-warning">
+                                                    <i class="fas fa-edit me-1"></i>Edit
+                                                </a>
+                                                <a href="{% url 'performance_analytics:delete_feedback' test_attempt_id=attempt.id %}" 
+                                                   class="btn btn-sm btn-outline-danger">
+                                                    <i class="fas fa-trash me-1"></i>Delete
+                                                </a>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                        <nav aria-label="Page navigation" class="mt-4">
+                            <ul class="pagination justify-content-center">
+                                {% if page_obj.has_previous %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page=1{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                            <i class="fas fa-angle-double-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                            <i class="fas fa-angle-left"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+
+                                <li class="page-item disabled">
+                                    <span class="page-link">
+                                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                    </span>
+                                </li>
+
+                                {% if page_obj.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                            <i class="fas fa-angle-right"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&search={{ search_query }}{% endif %}{% if filter_by %}&filter_by={{ filter_by }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}">
+                                            <i class="fas fa-angle-double-right"></i>
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                        <h3>No Tests Attempted Yet</h3>
+                        <p class="text-muted">Start taking tests to see your performance here.</p>
+                        <a href="{% url 'attempt_test:view_tests' %}" class="btn btn-primary">
+                            <i class="fas fa-play me-2"></i>View Available Tests
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<!-- Script to auto-hide flash messages -->
+<script>
+    // Auto-hide flash messages after 3 seconds
+    setTimeout(() => {
+        const flashMessages = document.querySelectorAll('.flash-message');
+        flashMessages.forEach((message) => {
+            message.classList.remove('show');
+            setTimeout(() => message.remove(), 150);
+        });
+    }, 3000);
+</script>
 {% endblock %}

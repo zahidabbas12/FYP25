@@ -6,6 +6,10 @@ from create_test.models import Test
 from question_bank.models import MCQ
 from django.utils import timezone
 
+def get_options(mcq):
+    """Get all options for a question in a list."""
+    return [mcq.option_a, mcq.option_b, mcq.option_c, mcq.option_d]
+
 @login_required
 def view_tests(request):
     # Fetch published tests that are visible to the students
@@ -70,11 +74,15 @@ def attempt_test(request, test_id, question_index=1):
                 'error_message': 'Please select an option before proceeding.'
             })
 
+        # Get the correct answer text based on the correct_answer letter
+        correct_answer_text = getattr(current_question.mcq, f'option_{current_question.mcq.correct_answer.lower()}')
+        selected_answer_text = getattr(current_question.mcq, f'option_{selected_option.lower()}')
+
         question_attempt = QuestionAttempt.objects.create(
             test_attempt=test_attempt,
             question=current_question.mcq,
             selected_option=selected_option,
-            is_correct=(selected_option == current_question.mcq.correct_answer)
+            is_correct=(selected_answer_text == correct_answer_text)
         )
 
         if question_index < len(questions):
@@ -96,6 +104,7 @@ def attempt_test(request, test_id, question_index=1):
 
 def test_result(request, test_attempt_id):
     test_attempt = get_object_or_404(TestAttempt, id=test_attempt_id)
+    test = test_attempt.test
 
     # Calculate time taken
     if test_attempt.start_time:
@@ -120,28 +129,51 @@ def test_result(request, test_attempt_id):
     else:
         time_taken_str = "Time not available"
 
+    # Get all question attempts
+    question_attempts = test_attempt.question_attempts.all()
+    total_questions = len(question_attempts)
+    
     # Calculate score and percentage
-    score = 0
-    total_questions = test_attempt.question_attempts.count()
-
-    for qa in test_attempt.question_attempts.all():
-        if qa.is_correct:
-            score += 1
+    correct_answers = sum(1 for qa in question_attempts if qa.is_correct)
+    score = correct_answers
     percentage = (score / total_questions) * 100 if total_questions > 0 else 0
+    
+    # Check if passed based on test's pass mark
+    is_passed = percentage >= test.pass_mark
 
-    # Save results
+    # Update test attempt with final results
     test_attempt.score = score
     test_attempt.percentage = percentage
     test_attempt.is_completed = True
     test_attempt.save()
 
-    # Pass the correct values to the template, including the answers and correctness
+    # Prepare question attempts with option data
+    for qa in question_attempts:
+        # Get the correct answer text
+        correct_answer_letter = qa.question.correct_answer.lower()
+        qa.correct_answer_text = getattr(qa.question, f'option_{correct_answer_letter}')
+        
+        # Get the selected answer text
+        selected_answer_letter = qa.selected_option.lower()
+        qa.selected_answer_text = getattr(qa.question, f'option_{selected_answer_letter}')
+        
+        # Add all options in a list for easy access
+        qa.all_options = [
+            ('A', qa.question.option_a),
+            ('B', qa.question.option_b),
+            ('C', qa.question.option_c),
+            ('D', qa.question.option_d)
+        ]
+
+    # Pass the correct values to the template
     return render(request, 'attempt_test/test_result.html', {
         'test_attempt': test_attempt,
+        'test': test,
         'score': score,
         'total_questions': total_questions,
         'percentage': percentage,
-        'time_taken': time_taken_str,  # Make sure this is being passed
+        'time_taken': time_taken_str,
+        'is_passed': is_passed,
         'page_title': 'Test Result - MCQ Test System',
-        'question_attempts': test_attempt.question_attempts.all()  # Pass the question attempts to the template
+        'question_attempts': question_attempts
     })

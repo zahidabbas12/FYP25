@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid py-4">
     <!-- Flash Messages -->
     {% if messages %}
     <div class="mb-4">
@@ -14,58 +14,69 @@
     </div>
     {% endif %}
 
-    <h1 class="display-4 text-primary">Welcome, {{ request.user | capfirst }}!</h1>
-    <p class="lead">
-        Here you can create questions, tests, manage the questions, view students' progress, and analyze their performance.
-    </p>
+    <div class="text-center mb-5">
+        <h1 class="display-4 text-primary">Welcome, {{ request.user | capfirst }}!</h1>
+        <p class="lead text-muted">
+            Here you can create questions, tests, manage the questions, view students' progress, and analyze their performance.
+        </p>
+    </div>
 
     <div class="row">
         <div class="col-12 col-md-3">
             {% include 'sidebar.html' %}
         </div>
+        
         <!-- Main content -->
-        <div class="col-12 col-md-9 p-4 border rounded shadow-sm bg-light">
-            <div class="row"><!-- Card for Total Registered Students -->
-                <div class="col-12 col-md-4 mb-3">
-                    <div class="card h-100 d-flex align-items-stretch">
-                        <div class="card-body">
-                            <h4>Total Registered Students:</h4>
-                            <h5><span class="text-muted font-weight-bold">{{ total_students }}</span></h5>
+        <div class="col-12 col-md-9">
+            <div class="row g-4">
+                <!-- Stats Cards -->
+                <div class="col-12 col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-users fa-2x text-primary mb-3"></i>
+                            <h4 class="text-muted mb-3">Total Registered Students</h4>
+                            <h2 class="text-primary">{{ total_students }}</h2>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Card for Total Tests Created -->
-                <div class="col-12 col-md-4 mb-3">
-                    <div class="card h-100 d-flex align-items-stretch">
-                        <div class="card-body">
-                            <h4>Total Tests Created:</h4>
-                            <h5><span class="text-muted font-weight-bold">{{ total_tests }}</span></h5>
+                <div class="col-12 col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-file-alt fa-2x text-success mb-3"></i>
+                            <h4 class="text-muted mb-3">Total Tests Created</h4>
+                            <h2 class="text-success">{{ total_tests }}</h2>
                         </div>
                     </div>
                 </div>
                 
-                <!-- Card for Total Questions Created -->
-                <div class="col-12 col-md-4 mb-3">
-                    <div class="card h-100 d-flex align-items-stretch">
-                        <div class="card-body">
-                            <h4>Total Questions Created:</h4>
-                            <h5><span class="text-muted font-weight-bold">{{ total_questions }}</span></h5>
+                <div class="col-12 col-md-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="card-body text-center">
+                            <i class="fas fa-question-circle fa-2x text-info mb-3"></i>
+                            <h4 class="text-muted mb-3">Total Questions Created</h4>
+                            <h2 class="text-info">{{ total_questions }}</h2>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Display List of Students with Enhanced Information -->
-                <div class="card p-4 mt-4">
-                    <h4 class="mb-4">Students Performance Overview</h4>
+            </div>
+
+            <!-- Students Performance Table -->
+            <div class="card border-0 shadow-sm mt-4">
+                <div class="card-header py-3">
+                    <h4 class="mb-0 text-center">Students Performance Overview</h4>
+                </div>
+                <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover mb-0">
                             <thead>
                                 <tr>
-                                    <th>Student Name</th>
-                                    <th>Tests Attempted</th>
-                                    <th>Average Score</th>
-                                    <th>Action</th>
+                                    <th class="border-0">Student Name</th>
+                                    <th class="border-0">Tests Attempted</th>
+                                    <th class="border-0">Average Score</th>
+                                    <th class="border-0">Progress</th>
+                                    <th class="border-0">Last Attempt</th>
+                                    <th class="border-0">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -75,15 +86,39 @@
                                     <td>{{ data.total_attempts }}</td>
                                     <td>{{ data.avg_score }}%</td>
                                     <td>
-                                        <a href="{% url 'performance_analytics:student_analytics' student_id=data.student.id %}" 
-                                           class="btn btn-sm btn-primary">
-                                            View Analytics
-                                        </a>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if data.avg_score >= 70 %}bg-success{% elif data.avg_score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ data.avg_score }}%">
+                                                {{ data.avg_score }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if data.last_attempt %}
+                                            {{ data.last_attempt|date:"M d, Y" }}
+                                        {% else %}
+                                            <span class="text-muted">No attempts yet</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group">
+                                            <a href="{% url 'performance_analytics:student_analytics' student_id=data.student.id %}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-chart-line me-1"></i>Analytics
+                                            </a>
+                                            <a href="{% url 'performance_analytics:user_performance' user_id=data.student.id %}" 
+                                               class="btn btn-sm btn-outline-info">
+                                                <i class="fas fa-list me-1"></i>Details
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="4" class="text-center">No students found.</td>
+                                    <td colspan="6" class="text-center py-4">
+                                        <p class="text-muted mb-0">No students found.</p>
+                                    </td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

@@ -1,0 +1,175 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 text-center">{{ student.username|title }}'s Performance Overview</h1>
+            <p class="text-muted text-center">Track student progress and achievements</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-12 col-md-3 mb-4">
+            {% include 'sidebar.html' %}
+        </div>
+
+        <!-- Main Content -->
+        <div class="col-12 col-md-9">
+            <!-- Summary Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-tasks fa-2x text-primary mb-3"></i>
+                            <h5 class="card-title mb-3">Tests Taken</h5>
+                            <h2 class="display-4 mb-0">{{ summary_stats.total_attempts }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-chart-line fa-2x text-success mb-3"></i>
+                            <h5 class="card-title mb-3">Average Score</h5>
+                            <h2 class="display-4 mb-0">{{ summary_stats.avg_score }}%</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-trophy fa-2x text-warning mb-3"></i>
+                            <h5 class="card-title mb-3">Highest Score</h5>
+                            <h2 class="display-4 mb-0">{{ summary_stats.highest_score }}%</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-flag fa-2x text-danger mb-3"></i>
+                            <h5 class="card-title mb-3">Latest Score</h5>
+                            <h2 class="display-4 mb-0">{{ summary_stats.latest_score }}%</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="row mb-4">
+                <!-- Performance Over Time -->
+                <div class="col-md-8 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Progress Over Time</h5>
+                            <p class="text-muted small">Track score improvements across different tests</p>
+                            {{ timeline_plot|safe }}
+                        </div>
+                    </div>
+                </div>
+                <!-- Feedback Sentiment -->
+                <div class="col-md-4 mb-4">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Feedback Sentiment</h5>
+                            <p class="text-muted small">Distribution of feedback received</p>
+                            {{ sentiment_plot|safe }}
+                        </div>
+                    </div>
+                </div>
+                <!-- Performance by Subject -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">Performance by Subject</h5>
+                            <p class="text-muted small">Average scores in different subjects</p>
+                            {{ avg_scores_plot|safe }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Tests Table -->
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Test Results</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Test Name</th>
+                                    <th>Score</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for data in performance_data|slice:":5" %}
+                                <tr>
+                                    <td>{{ data.date }}</td>
+                                    <td>{{ data.test_name }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if data.percentage >= data.pass_mark %}bg-success{% elif data.percentage >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ data.percentage }}%">
+                                                {{ data.percentage|floatformat:1 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if data.percentage >= data.pass_mark %}
+                                            <span class="badge bg-success">Passed</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'performance_analytics:test_details' test_attempt_id=data.attempt_id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center mb-4">
+                <a href="{{ back_url }}" 
+                   class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>{{ back_text }}
+                </a>
+            </div>
+
+            {% if is_teacher %}
+            <div class="text-center mb-4">
+                <a href="{% url 'performance_analytics:visualize_performance' user_id=request.user.id %}" 
+                   class="btn btn-secondary">
+                    <i class="fas fa-chart-line me-2"></i>Class Overview
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+    // Initialize tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+    })
+</script>
+{% endblock %}

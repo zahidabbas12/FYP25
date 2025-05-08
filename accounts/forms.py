@@ -12,5 +12,12 @@ class ProfileEditForm(forms.ModelForm):
         model = CustomUser
         fields = ['username', 'email', 'profile_picture']
         widgets = {
-            'profile_picture': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'bio': forms.Textarea(attrs={'rows': 4}),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['profile_picture'].widget.attrs.update({
+            'class': 'form-control',
+            'accept': 'image/*'
+        })

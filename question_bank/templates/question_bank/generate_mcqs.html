@@ -1,0 +1,194 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 text-center">Generate MCQs</h1>
+            <p class="text-muted text-center">Generate questions from text automatically</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-12 col-md-3 mb-4">
+            {% include 'sidebar.html' %}
+        </div>
+
+        <!-- Main content -->
+        <div class="col-12 col-md-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <!-- Input Form -->
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        <div class="mb-4">
+                            <label for="text" class="form-label">
+                                <i class="fas fa-file-alt me-2"></i>Enter Text
+                            </label>
+                            <textarea class="form-control" 
+                                      id="text" 
+                                      name="text" 
+                                      rows="6" 
+                                      placeholder="Paste your text content here..."
+                                      required></textarea>
+                            <div class="invalid-feedback">
+                                Please enter some text to generate questions.
+                            </div>
+                            <div class="form-text">
+                                The AI will analyze this text and generate relevant multiple-choice questions.
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="generateBtn">
+                                <i class="fas fa-magic me-2"></i>Generate MCQs
+                            </button>
+                        </div>
+                    </form>
+
+                    <!-- Error Message -->
+                    {% if error_message %}
+                        <div class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
+                            <i class="fas fa-exclamation-circle me-2"></i>{{ error_message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endif %}
+
+                    <!-- Generated Questions -->
+                    {% if mcqs %}
+                        <div class="mt-4">
+                            <h4 class="mb-3">
+                                <i class="fas fa-list me-2"></i>Generated Questions
+                                <span class="badge bg-primary ms-2">{{ mcqs|length }} Questions</span>
+                            </h4>
+                            
+                            <form method="post" action="{% url 'save_mcqs' %}" id="saveMcqsForm">
+                                {% csrf_token %}
+                                
+                                <!-- Select All -->
+                                <div class="card mb-3">
+                                    <div class="card-body">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAllQuestions()">
+                                            <label class="form-check-label" for="selectAll">
+                                                Select All Questions
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Questions List -->
+                                <div class="row g-3">
+                                    {% for mcq in mcqs %}
+                                        <div class="col-12">
+                                            <div class="card">
+                                                <div class="card-header bg-light">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input question-checkbox" 
+                                                               type="checkbox" 
+                                                               name="selected_questions" 
+                                                               value="{{ forloop.counter0 }}"
+                                                               id="mcq-{{ forloop.counter }}">
+                                                        <label class="form-check-label fw-bold" for="mcq-{{ forloop.counter }}">
+                                                            Question {{ forloop.counter }}
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="card-text">{{ mcq.question }}</p>
+                                                    <div class="list-group mb-3">
+                                                        {% for option in mcq.options %}
+                                                            <div class="list-group-item">
+                                                                <div class="ms-2 me-auto">
+                                                                    <div class="fw-bold">Option {{ forloop.counter }}</div>
+                                                                    {{ option }}
+                                                                </div>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <span class="badge bg-success">Correct: Option {{ mcq.correct_answer }}</span>
+                                                        <span class="badge bg-info">{{ mcq.category }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="card-footer bg-light">
+                                                    <small class="text-muted">
+                                                        <i class="fas fa-info-circle me-1"></i>
+                                                        {{ mcq.explanation }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <input type="hidden" name="questions" value="{{ mcq.question }}">
+                                        <input type="hidden" name="correct_answers" value="{{ mcq.correct_answer }}">
+                                        <input type="hidden" name="explanations" value="{{ mcq.explanation }}">
+                                        <input type="hidden" name="difficulties" value="{{ mcq.difficulty }}">
+                                        <input type="hidden" name="categories" value="{{ mcq.category }}">
+                                    {% endfor %}
+                                </div>
+
+                                <!-- Save Button -->
+                                <div class="d-grid gap-2 mt-4">
+                                    <button type="submit" class="btn btn-success" id="saveBtn" disabled>
+                                        <i class="fas fa-save me-2"></i>Save Selected Questions
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+
+// Loading state for generate button
+document.querySelector('form').addEventListener('submit', function() {
+    const btn = document.getElementById('generateBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Generating...';
+});
+
+// Toggle all questions
+function toggleAllQuestions() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.question-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    updateSaveButton();
+}
+
+// Update save button state
+function updateSaveButton() {
+    const saveBtn = document.getElementById('saveBtn');
+    const checkedQuestions = document.querySelectorAll('.question-checkbox:checked').length;
+    saveBtn.disabled = checkedQuestions === 0;
+    saveBtn.innerHTML = `<i class="fas fa-save me-2"></i>Save Selected Questions (${checkedQuestions})`;
+}
+
+// Add event listeners to checkboxes
+document.querySelectorAll('.question-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSaveButton);
+});
+</script>
+{% endblock %}

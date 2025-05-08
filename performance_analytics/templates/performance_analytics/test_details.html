@@ -1,66 +1,220 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container mt-4">
-    <h2>Test Details</h2>
-
-    <!-- Test Information -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">{{ test_attempt.test.title }}</h5>
-            <p class="card-text"><strong>Score:</strong> {{ test_attempt.score }}%</p>
-            <p class="card-text"><strong>Date:</strong> {{ test_attempt.attempt_date }}</p>
-            <p class="card-text"><strong>Student:</strong> {{ test_attempt.user.username | capfirst }}</p>
-            <p class="card-text"><strong>Total Questions:</strong> {{ test_attempt.test.test_mcqs.count }}</p>
-            <!-- <p class="card-text"><strong>Correct Answers:</strong> {{ test_attempt.correct_answers }}</p>
-            <p class="card-text"><strong>Incorrect Answers:</strong> {{ test_attempt.incorrect_answers }}</p> -->
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 text-center">{{ test_attempt.test.title }}</h1>
+            <p class="text-muted text-center">Test attempt details and feedback</p>
         </div>
     </div>
 
-    <!-- Statistics Section -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <h5 class="card-title">Test Statistics</h5>
-            <p class="card-text"><strong>Total Attempts:</strong> {{ total_attempts }}</p>
-            <p class="card-text"><strong>Average Score:</strong> {{ average_score }}%</p>
-            <p class="card-text"><strong>Attempts with Feedback:</strong> {{ tests_with_feedback }}</p>
+    <div class="row">
+        <!-- Test Information Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-info-circle text-primary me-2"></i>Test Information
+                    </h5>
+                    
+                    <!-- Score Display -->
+                    <div class="text-center mb-4">
+                        <div class="display-4 mb-2">{{ test_attempt.percentage|floatformat:1 }}%</div>
+                        <div class="progress mb-2" style="height: 25px;">
+                            <div class="progress-bar {% if test_attempt.percentage >= test_attempt.test.pass_mark %}bg-success{% elif test_attempt.percentage >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ test_attempt.percentage }}%">
+                            </div>
+                        </div>
+                        <span class="badge {% if test_attempt.percentage >= test_attempt.test.pass_mark %}bg-success{% elif test_attempt.percentage >= 40 %}bg-warning{% else %}bg-danger{% endif %}">
+                            {% if test_attempt.percentage >= test_attempt.test.pass_mark %}Passed{% elif test_attempt.percentage >= 40 %}Average{% else %}Needs Improvement{% endif %}
+                        </span>
+                    </div>
+
+                    <!-- Test Details -->
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light">
+                                <div class="small text-muted">Date Taken</div>
+                                <div class="fw-bold">
+                                    <i class="fas fa-calendar-alt text-primary me-2"></i>
+                                    {{ test_attempt.attempt_date|date:"M d, Y" }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light">
+                                <div class="small text-muted">Student</div>
+                                <div class="fw-bold">
+                                    <i class="fas fa-user text-primary me-2"></i>
+                                    {{ test_attempt.user.username|title }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light">
+                                <div class="small text-muted">Total Questions</div>
+                                <div class="fw-bold">
+                                    <i class="fas fa-question-circle text-primary me-2"></i>
+                                    {{ test_attempt.test.test_mcqs.count }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-3 border rounded bg-light">
+                                <div class="small text-muted">Time Taken</div>
+                                <div class="fw-bold">
+                                    <i class="fas fa-clock text-primary me-2"></i>
+                                    {{ time_taken }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Card -->
+        <div class="col-md-6 mb-4">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title mb-4">
+                        <i class="fas fa-chart-bar text-success me-2"></i>Test Statistics
+                    </h5>
+                    
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="display-6 mb-2">{{ total_attempts }}</div>
+                                <div class="text-muted small">Total Attempts</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="display-6 mb-2">{{ average_percentage|floatformat:1 }}%</div>
+                                <div class="text-muted small">Average Score</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="text-center">
+                                <div class="display-6 mb-2">{{ tests_with_feedback }}</div>
+                                <div class="text-muted small">With Feedback</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Performance Comparison -->
+                    <div class="mt-4">
+                        <h6 class="text-muted mb-3">
+                            {% if is_viewing_own_attempt %}
+                                Your Performance vs Average
+                            {% else %}
+                                Student's Performance vs Average
+                            {% endif %}
+                        </h6>
+                        <div class="progress mb-3" style="height: 25px;">
+                            <div class="progress-bar bg-primary" 
+                                 role="progressbar" 
+                                 style="width: {{ test_attempt.percentage }}%">
+                                {% if is_viewing_own_attempt %}
+                                    Your Score ({{ test_attempt.percentage|floatformat:1 }}%)
+                                {% else %}
+                                    Student's Score ({{ test_attempt.percentage|floatformat:1 }}%)
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="progress" style="height: 25px;">
+                            <div class="progress-bar bg-secondary" 
+                                 role="progressbar" 
+                                 style="width: {{ average_percentage }}%">
+                                Average ({{ average_percentage|floatformat:1 }}%)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Feedback Section -->
-    {% if feedback %}
-    <div class="card mb-4">
+    <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-            <h5 class="card-title">Feedback</h5>
-            <p class="card-text">{{ feedback.content }}</p>
-            <p class="card-text"><small class="text-muted">By: {{ feedback.teacher.username }}</small></p>
+            <h5 class="card-title mb-4">
+                <i class="fas fa-comments text-warning me-2"></i>Teacher's Feedback
+            </h5>
 
-            <!-- Feedback Edit and Delete Buttons -->
-            {% if test_attempt.feedback.teacher == request.user %}
-            <div class="d-flex justify-content-start mt-3">
-                <a href="{% url 'performance_analytics:update_feedback' test_attempt_id=test_attempt.id %}"
-                   class="btn btn-warning btn-sm me-2">Edit Feedback</a>
-                <form action="{% url 'performance_analytics:delete_feedback' test_attempt_id=test_attempt.id %}" method="post"
-                      style="display: inline;">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger btn-sm"
-                            onclick="return confirm('Are you sure you want to delete this feedback?')">Delete Feedback</button>
-                </form>
-            </div>
+            {% if feedback %}
+                <div class="feedback-content p-4 bg-light rounded">
+                    <p class="lead mb-3">{{ feedback.content }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="fas fa-user-circle me-2"></i>
+                            Provided by: {{ feedback.teacher.username|title }}
+                        </small>
+                        
+                        {% if feedback.teacher == request.user %}
+                        <div class="btn-group">
+                            <a href="{% url 'performance_analytics:update_feedback' test_attempt_id=test_attempt.id %}"
+                               class="btn btn-warning btn-sm">
+                                <i class="fas fa-edit me-2"></i>Edit
+                            </a>
+                            <button type="button" 
+                                    class="btn btn-danger btn-sm"
+                                    onclick="confirmDeleteFeedback()">
+                                <i class="fas fa-trash me-2"></i>Delete
+                            </button>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">No feedback provided yet.</p>
+                    {% if is_teacher %}
+                        <a href="{% url 'performance_analytics:create_feedback' test_attempt_id=test_attempt.id %}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Provide Feedback
+                        </a>
+                    {% endif %}
+                </div>
             {% endif %}
         </div>
     </div>
-    {% else %}
-    <p>No feedback yet.</p>
-    {% if request.user.is_staff %}
-    <a href="{% url 'performance_analytics:create_feedback' test_attempt_id=test_attempt.id %}" class="btn btn-primary mt-2">Provide Feedback</a>
-    {% endif %}
-    {% endif %}
 
-    <!-- Back Button -->
-    <div class="mt-4">
-        <a href="{% url 'performance_analytics:user_performance' user_id=request.user.id %}" class="btn btn-secondary">Back to Performance</a>
+    <!-- Navigation Buttons -->
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{{ back_url }}" 
+           class="btn btn-secondary">
+            <i class="fas fa-arrow-left me-2"></i>{{ back_text }}
+        </a>
+        {% if is_teacher %}
+            <a href="{% url 'performance_analytics:visualize_performance' user_id=request.user.id %}" 
+               class="btn btn-primary">
+                <i class="fas fa-chart-line me-2"></i>Class Overview
+            </a>
+        {% endif %}
     </div>
-
 </div>
+
+<!-- Delete Feedback Form (Hidden) -->
+<form id="deleteFeedbackForm" 
+      action="{% url 'performance_analytics:delete_feedback' test_attempt_id=test_attempt.id %}" 
+      method="post" 
+      style="display: none;">
+    {% csrf_token %}
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDeleteFeedback() {
+    if (confirm('Are you sure you want to delete this feedback? This action cannot be undone.')) {
+        document.getElementById('deleteFeedbackForm').submit();
+    }
+}
+</script>
 {% endblock %}

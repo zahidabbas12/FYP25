@@ -1,109 +1,219 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="text-center mt-4 mb-4">Manage Tests</h1>
-    <div class="container mt-4">
-        <div class="row">
-            <!-- Sidebar with responsive width -->
-            <div class="col-12 col-md-3">
-                {% include 'sidebar.html' %}
-            </div>
+<div class="container-fluid py-4">
+    {% csrf_token %}
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 text-center">Manage Tests</h1>
+            <p class="text-muted text-center">Create and manage your MCQ tests</p>
+        </div>
+    </div>
 
-            <!-- Main content: Tests List -->
-            <div class="col-12 col-md-9 p-4 border rounded shadow-sm bg-light">
-                <!-- Search and Add Test Section -->
-                <div class="d-flex flex-column flex-md-row justify-content-start align-items-start mb-4">
-                    <!-- Search Field -->
-                    <div class="me-md-3 mb-3 mb-md-0 flex-grow-1">
-                        <input type="text" class="form-control" placeholder="Search tests...">
+    <div class="row">
+        <!-- Add this messages section -->
+        {% if messages %}
+            <div class="col-12 mb-3">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Sidebar -->
+        <div class="col-12 col-md-3 mb-4">
+            {% include 'sidebar.html' %}
+        </div>
+
+        <!-- Main content -->
+        <div class="col-12 col-md-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <!-- Search and Add Test Section -->
+                    <div class="row g-3 mb-4">
+                        <!-- Search Field -->
+                        <div class="col-12 col-md-8">
+                            <form method="get" action="" class="search-form">
+                                <div class="input-group">
+                                    <input type="text" 
+                                           name="search" 
+                                           class="form-control" 
+                                           placeholder="Search tests..." 
+                                           value="{{ request.GET.search }}"
+                                           aria-label="Search tests">
+                                    <button class="btn btn-outline-secondary" type="submit">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Add Test Button -->
+                        <div class="col-12 col-md-4">
+                            <a href="{% url 'create_test' %}" class="btn btn-success w-100">
+                                <i class="fas fa-plus"></i> Create New Test
+                            </a>
+                        </div>
                     </div>
 
-                    <!-- Add Test Button -->
-                    <a href="{% url 'create_test' %}" class="btn btn-success mb-3 mb-md-0 ms-md-auto">Add Test</a>
-                </div>
-                <hr>
-                <!-- Table for Tests List -->
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th scope="col">Title</th>
-                                <th scope="col">Created By</th>
-                                <th scope="col">Created Date</th>
-                                <th scope="col">Time (Minutes)</th>
-                                <th scope="col">Passing %</th>
-                                <th scope="col">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for test in page_obj.object_list %}
-                            <tr>
-                                <td>{{ test.title }}</td>
-                                <td>{{ test.teacher.username|capfirst }}</td>
-                                <td>{{ test.created_at|date:"Y-m-d" }}</td>
-                                <td>{{ test.duration }}</td>
-                                <td>{{ test.pass_mark }}%</td> 
-                                <td>
-                                    <a href="{% url 'edit_test' test.id %}" class="btn btn-warning btn-sm">Edit</a>
-                                    <form action="{% url 'delete_test' test.id %}" method="post"
-                                        style="display: inline;">
-                                        {% csrf_token %}
-                                        <button type="submit" class="btn btn-danger btn-sm"
-                                            onclick="return confirm('Are you sure you want to delete this test?')">Delete</button>
-                                    </form>
-                                </td>
-                            </tr>
-                            {% empty %}
-                            <tr>
-                                <td colspan="5" class="text-center">
-                                    No tests found.<br>
-                                    <a href="{% url 'create_test' %}" class="btn btn-success mt-2">Create a new test</a>
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination controls -->
-                <div class="mt-2">
-                    <nav aria-label="Page navigation">
-                        <ul class="pagination">
+                    <!-- Tests Table -->
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th scope="col">Title</th>
+                                    <th scope="col">Created By</th>
+                                    <th scope="col">Date</th>
+                                    <th scope="col">Duration</th>
+                                    <th scope="col">Pass %</th>
+                                    <th scope="col" width="150">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test in page_obj.object_list %}
+                                    <tr>
+                                        <td>
+                                            <div class="fw-bold">{{ test.title }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-user-circle me-2"></i>
+                                                {{ test.teacher.username|capfirst }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="small text-muted">
+                                                <i class="fas fa-calendar-alt me-1"></i>
+                                                {{ test.created_at|date:"M d, Y" }}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ test.duration }} mins
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar {% if test.pass_mark >= 70 %}bg-success{% elif test.pass_mark >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                     role="progressbar" 
+                                                     style="width: {{ test.pass_mark }}%"
+                                                     aria-valuenow="{{ test.pass_mark }}" 
+                                                     aria-valuemin="0" 
+                                                     aria-valuemax="100">
+                                                    {{ test.pass_mark }}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <a href="{% url 'edit_test' test.id %}" 
+                                                   class="btn btn-outline-warning btn-sm"
+                                                   title="Edit Test">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <button type="button" 
+                                                        class="btn btn-outline-danger btn-sm"
+                                                        onclick="deleteTest('{{ test.id }}')"
+                                                        title="Delete Test">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center py-4">
+                                            <div class="text-muted mb-3">
+                                                <i class="fas fa-clipboard-list fa-3x"></i>
+                                                <p class="mt-2">No tests found</p>
+                                            </div>
+                                            <a href="{% url 'create_test' %}" class="btn btn-success">
+                                                <i class="fas fa-plus"></i> Create your first test
+                                            </a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Pagination -->
+                    {% if page_obj.paginator.num_pages > 1 %}
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
                             {% if page_obj.has_previous %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page=1" aria-label="First">
-                                    <span aria-hidden="true">&laquo;&laquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-                                    <span aria-hidden="true">&laquo;</span>
-                                </a>
-                            </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="First">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Previous">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
                             {% endif %}
 
                             <li class="page-item disabled">
-                                <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                                <span class="page-link">
+                                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                                </span>
                             </li>
 
                             {% if page_obj.has_next %}
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-                                    <span aria-hidden="true">&raquo;</span>
-                                </a>
-                            </li>
-                            <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}" aria-label="Last">
-                                    <span aria-hidden="true">&raquo;&raquo;</span>
-                                </a>
-                            </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Next">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" aria-label="Last">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
                             {% endif %}
                         </ul>
                     </nav>
+                    {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function deleteTest(id) {
+    if (confirm('Are you sure you want to delete this test? This action cannot be undone.')) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = "{% url 'delete_test' 0 %}".replace('0', id);
+        
+        // Add CSRF token
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrfmiddlewaretoken';
+        csrfInput.value = csrfToken;
+        
+        form.appendChild(csrfInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Add success message handling
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-hide success messages after 3 seconds
+    const messages = document.querySelectorAll('.alert');
+    messages.forEach(function(message) {
+        setTimeout(function() {
+            message.style.display = 'none';
+        }, 3000);
+    });
+});
+</script>
 {% endblock %}

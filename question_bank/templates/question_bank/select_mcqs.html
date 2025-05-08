@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">Select MCQs</h1>
+            <p class="lead">Review and select the generated MCQs to save or delete</p>
+        </div>
+    </div>
+
+    <form method="post" action="{% url 'save_mcqs' %}" id="mcqForm">
+        {% csrf_token %}
+        
+        <div class="row mb-3">
+            <div class="col">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Save Selected
+                        </button>
+                        <button type="submit" formaction="{% url 'delete_generated_mcqs' %}" class="btn btn-danger ms-2">
+                            <i class="fas fa-trash"></i> Delete Selected
+                        </button>
+                    </div>
+                    <div>
+                        <button type="button" class="btn btn-secondary" onclick="selectAll()">Select All</button>
+                        <button type="button" class="btn btn-outline-secondary" onclick="deselectAll()">Deselect All</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% for mcq in mcqs %}
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <div class="form-check">
+                        <input type="checkbox" 
+                               name="selected_mcqs" 
+                               value="{{ mcq.question }}"
+                               class="form-check-input mcq-checkbox"
+                               id="mcq_{{ forloop.counter }}">
+                        <label class="form-check-label h5 mb-0" for="mcq_{{ forloop.counter }}">
+                            Question {{ forloop.counter }}
+                        </label>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Question:</label>
+                        <textarea class="form-control" name="questions" rows="2">{{ mcq.question }}</textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="mb-3">Options:</h6>
+                            {% for key, option in mcq.options.items %}
+                                <div class="mb-2">
+                                    <label class="form-label">{{ key }}:</label>
+                                    <input type="text" 
+                                           class="form-control"
+                                           name="option_{{ forloop.parentloop.counter0 }}_{{ key }}" 
+                                           value="{{ option }}">
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Correct Answer:</label>
+                                <select name="correct_answers" class="form-select">
+                                    {% for key, option in mcq.options.items %}
+                                        <option value="{{ key }}" {% if key == mcq.correct_answer %}selected{% endif %}>
+                                            {{ key }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Category:</label>
+                                <select name="categories" class="form-select">
+                                    {% for cat, _ in categories %}
+                                        <option value="{{ cat }}" {% if cat == mcq.category %}selected{% endif %}>
+                                            {{ cat }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label">Difficulty:</label>
+                                <select name="difficulties" class="form-select">
+                                    <option value="Easy" {% if mcq.difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+                                    <option value="Medium" {% if mcq.difficulty == 'Medium' %}selected{% endif %}>Medium</option>
+                                    <option value="Hard" {% if mcq.difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <label class="form-label">Explanation:</label>
+                        <textarea class="form-control" name="explanations" rows="3">{{ mcq.explanation }}</textarea>
+                    </div>
+                </div>
+            </div>
+        {% empty %}
+            <div class="alert alert-info">
+                No MCQs have been generated yet. Please generate some MCQs first.
+            </div>
+        {% endfor %}
+    </form>
+</div>
+
+<script>
+function selectAll() {
+    document.querySelectorAll('.mcq-checkbox').forEach(checkbox => {
+        checkbox.checked = true;
+    });
+}
+
+function deselectAll() {
+    document.querySelectorAll('.mcq-checkbox').forEach(checkbox => {
+        checkbox.checked = false;
+    });
+}
+
+// Confirm before deleting
+document.querySelector('button[formaction*="delete"]').addEventListener('click', function(e) {
+    const checkedBoxes = document.querySelectorAll('.mcq-checkbox:checked').length;
+    if (checkedBoxes === 0) {
+        e.preventDefault();
+        alert('Please select at least one MCQ to delete.');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete ${checkedBoxes} selected MCQ(s)?`)) {
+        e.preventDefault();
+    }
+});
+
+// Confirm before saving
+document.querySelector('button[type="submit"]').addEventListener('click', function(e) {
+    const checkedBoxes = document.querySelectorAll('.mcq-checkbox:checked').length;
+    if (checkedBoxes === 0) {
+        e.preventDefault();
+        alert('Please select at least one MCQ to save.');
+    }
+});
+</script>
+{% endblock %} 

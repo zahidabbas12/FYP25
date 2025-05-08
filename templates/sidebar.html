@@ -1,26 +1,86 @@
 {% if user.role == 'teacher' or user.is_superuser %}
 <!-- Links for Teacher or Superuser -->
-<div class="list-group p-2 border rounded shadow-sm bg-light">
-    <a href="{% url 'add_question' %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Add Questions</a>
-    <a href="{% url 'manage_questions' %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Manage Questions</a>
-    <a href="{% url 'create_test' %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Add Tests</a>
-    <a href="{% url 'manage_tests' %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Manage Tests</a>
-    <a href="{% url 'performance_analytics:user_performance' user.id %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Attempted Tests</a>
-    <a href="{% url 'performance_analytics:visualize_performance' user.id %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Analyze Performance</a>
+<div class="list-group p-2 border rounded shadow-sm sticky-top" style="top: 20px;">
+  <a
+    href="{% url 'add_question' %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-plus-circle me-2"></i>Add Questions</a
+  >
+  <a
+    href="{% url 'generate_mcqs' %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+  >
+    <i class="fas fa-robot me-2"></i>MCQ Generator</a
+  >
+  <a
+    href="{% url 'manage_questions' %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-tasks me-2"></i>Manage Questions</a
+  >
+  <a
+    href="{% url 'create_test' %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-plus-square me-2"></i>Add Tests</a
+  >
+  <a
+    href="{% url 'manage_tests' %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-clipboard-list me-2"></i>Manage Tests</a
+  >
+  <a
+    href="{% url 'performance_analytics:user_performance' user.id %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-comment-alt me-2"></i>Feedback</a
+  >
+  <a
+    href="{% url 'performance_analytics:visualize_performance' user.id %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-chart-line me-2"></i>Analyze Performance</a
+  >
 </div>
 {% elif user.role == 'student' %}
-<div class="list-group p-2 mb-3 rounded shadow-sm bg-light">
-    <a href="{% url 'attempt_test:view_tests' %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Attempt Tests</a>
-    <a href="{% url 'performance_analytics:user_performance' user.id %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">My Performance</a>
-    <a href="{% url 'performance_analytics:visualize_performance' user.id %}"
-        class="list-group-item list-group-item-action bg-light p-3 mb-2 rounded border">Analyze Performance</a>
+<div class="list-group p-2 mb-3 rounded shadow-sm sticky-top" style="top: 20px;">
+  <a
+    href="{% url 'attempt_test:view_tests' %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-pencil-alt me-2"></i>Attempt Tests</a
+  >
+  <a
+    href="{% url 'performance_analytics:user_performance' user.id %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-chart-bar me-2"></i>My Performance</a
+  >
+  <a
+    href="{% url 'performance_analytics:visualize_performance' user.id %}"
+    class="list-group-item list-group-item-action p-3 mb-2 rounded border"
+    ><i class="fas fa-chart-line me-2"></i>Analyze Performance</a
+  >
 </div>
 {% endif %}
+
+<style>
+  .list-group {
+    background-color: var(--bs-body-bg) !important;
+    border-color: var(--bs-border-color) !important;
+  }
+
+  .list-group-item {
+    background-color: var(--bs-body-bg) !important;
+    border-color: var(--bs-border-color) !important;
+    color: var(--bs-body-color) !important;
+    transition: all 0.3s ease;
+  }
+
+  .list-group-item:hover {
+    background-color: var(--bs-tertiary-bg) !important;
+    color: var(--bs-link-color) !important;
+  }
+
+  .list-group-item i {
+    color: var(--bs-primary);
+  }
+
+  .list-group-item:hover i {
+    color: var(--bs-link-color);
+  }
+</style>

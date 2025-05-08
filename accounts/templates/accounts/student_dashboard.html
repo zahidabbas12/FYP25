@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block content %}
-<div class="container mt-4">
+<div class="container-fluid py-4">
     <!-- Flash Messages -->
     {% if messages %}
     <div class="mb-4">
@@ -13,36 +13,90 @@
     </div>
     {% endif %}
     
-    <!-- Full-page welcome section -->
-    <h1 class="display-4 text-primary">Welcome, {{ request.user | capfirst }}!</h1>
-    <p class="lead">Here you can attempt tests, view your progress, and analyze your performance.</p>
+    <div class="text-center mb-5">
+        <h1 class="display-4 text-primary">Welcome, {{ request.user | capfirst }}!</h1>
+        <p class="lead text-muted">
+            Here you can attempt tests, view your progress, and analyze your performance.
+        </p>
+    </div>
     
-    <!-- Create the 30% and 70% sections for future content -->
-    <div class="row mt-5">
+    <div class="row">
         <!-- 30% section for student action links -->
-        <div class="col-md-3">
-            <ul class="list-unstyled">
-                {% include 'sidebar.html' %}
-                <!-- More links can be added in future -->
-            </ul>
+        <div class="col-12 col-md-3">
+            {% include 'sidebar.html' %}
         </div>
 
-        <!-- 70% section for future content (currently empty) -->
-        <div class="col-md-9">
-            <!-- Placeholder for future content -->
+        <!-- 70% section for content -->
+        <div class="col-12 col-md-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Your Recent Performance</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Test Name</th>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for attempt in recent_attempts %}
+                                <tr>
+                                    <td>{{ attempt.test.title }}</td>
+                                    <td>{{ attempt.attempt_date|date:"M d, Y" }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar {% if attempt.score >= 70 %}bg-success{% elif attempt.score >= 40 %}bg-warning{% else %}bg-danger{% endif %}" 
+                                                 role="progressbar" 
+                                                 style="width: {{ attempt.score }}%">
+                                                {{ attempt.score }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if attempt.score >= 70 %}
+                                            <span class="badge bg-success">Passed</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Failed</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'performance_analytics:test_details' test_attempt_id=attempt.id %}" 
+                                           class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-eye me-1"></i>View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-4">
+                                        <p class="text-muted mb-0">No tests attempted yet.</p>
+                                        <a href="{% url 'attempt_test:view_tests' %}" class="btn btn-primary mt-3">
+                                            <i class="fas fa-play me-2"></i>Start Your First Test
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- Script to auto-hide flash messages -->
 <script>
-    // Auto-hide flash messages after 3 seconds
     setTimeout(() => {
         const flashMessages = document.querySelectorAll('.flash-message');
         flashMessages.forEach((message) => {
-            message.classList.remove('show'); // Removes "show" class from alert
-            setTimeout(() => message.remove(), 150); // Removes element after fade-out
+            message.classList.remove('show');
+            setTimeout(() => message.remove(), 150);
         });
-    }, 3000); // Adjust timeout duration as needed (3000ms = 3 seconds)
+    }, 3000);
 </script>
 {% endblock %}

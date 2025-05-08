@@ -1,33 +1,144 @@
 {% extends 'base.html' %}
+
 {% block content %}
-<h1>Add MCQs to Test: {{ test.title }}</h1>
-
-<!-- Form to add MCQ -->
-<form method="post">
-    {% csrf_token %}
-    <div class="form-group mb-3">
-        <label for="mcq">Choose MCQ</label>
-        {{ form.mcq }}  <!-- The MCQ selection field -->
+<div class="container">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4 text-center">Add Questions</h1>
+            <p class="lead text-center text-muted">Select questions to add to: {{ test.title }}</p>
+        </div>
     </div>
 
-    <div class="form-group mb-3">
-        <label for="order">Order</label>
-        {{ form.order }}  <!-- The order input field -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <form method="post" action="{% url 'add_mcqs_to_test' test.id %}" id="addQuestionsForm">
+                {% csrf_token %}
+                
+                <!-- Search and Filter Section -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-8">
+                        <div class="input-group">
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="searchInput" 
+                                   placeholder="Search questions..."
+                                   onkeyup="filterQuestions()">
+                            <button class="btn btn-outline-secondary" type="button">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <select class="form-select" id="categoryFilter" onchange="filterQuestions()">
+                            <option value="">All Categories</option>
+                            {% for category in categories %}
+                                <option value="{{ category }}">{{ category }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Questions Table -->
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" class="form-check-input" id="selectAll" onclick="toggleAll()">
+                                </th>
+                                <th>Question</th>
+                                <th>Category</th>
+                                <th>Difficulty</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mcq in available_mcqs %}
+                                <tr class="question-row" data-category="{{ mcq.category }}">
+                                    <td>
+                                        <input type="checkbox" 
+                                               name="selected_mcqs" 
+                                               value="{{ mcq.id }}" 
+                                               class="form-check-input question-checkbox"
+                                               {% if mcq.id in existing_mcq_ids %}disabled{% endif %}>
+                                    </td>
+                                    <td>{{ mcq.question }}</td>
+                                    <td><span class="badge bg-primary">{{ mcq.category }}</span></td>
+                                    <td><span class="badge bg-secondary">{{ mcq.difficulty }}</span></td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                                            <p>No questions available.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <span class="text-muted" id="selectedCount"></span>
+                    <div>
+                        <a href="{% url 'edit_test' test.id %}" class="btn btn-outline-secondary me-2">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Add Selected Questions
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
     </div>
+</div>
 
-    <button type="submit" class="btn btn-primary">Add MCQ</button>
-    <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary btn-sm ms-2">Cancel</a>
+<script>
+function updateSelectedCount() {
+    const count = document.querySelectorAll('.question-checkbox:checked').length;
+    document.getElementById('selectedCount').textContent = 
+        count ? `${count} question(s) selected` : '';
+}
 
-</form>
+function toggleAll() {
+    const mainCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.question-checkbox:not([disabled])');
+    checkboxes.forEach(checkbox => checkbox.checked = mainCheckbox.checked);
+    updateSelectedCount();
+}
 
-<!-- Available MCQs List -->
-<h2>Available MCQs</h2>
-<ul class="list-group">
-    {% for mcq in mcqs %}
-        <li class="list-group-item">{{ mcq.question }}</li>
-    {% empty %}
-        <li class="list-group-item">No available MCQs</li>
-    {% endfor %}
-</ul>
+function filterQuestions() {
+    const searchText = document.getElementById('searchInput').value.toLowerCase();
+    const category = document.getElementById('categoryFilter').value;
+    
+    document.querySelectorAll('.question-row').forEach(row => {
+        const questionText = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+        const questionCategory = row.dataset.category;
+        
+        const matchesSearch = questionText.includes(searchText);
+        const matchesCategory = !category || questionCategory === category;
+        
+        row.style.display = (matchesSearch && matchesCategory) ? '' : 'none';
+    });
+}
 
+document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to checkboxes
+    document.querySelectorAll('.question-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+    });
+
+    // Form submission validation
+    document.getElementById('addQuestionsForm').addEventListener('submit', function(e) {
+        const selectedCount = document.querySelectorAll('.question-checkbox:checked').length;
+        if (selectedCount === 0) {
+            e.preventDefault();
+            alert('Please select at least one question to add.');
+        }
+    });
+});
+</script>
 {% endblock %}

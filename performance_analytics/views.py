@@ -8,7 +8,7 @@ from .models import TestAttempt, Feedback
 from nltk.sentiment import SentimentIntensityAnalyzer
 import nltk
 import json
-from django.db.models import Avg, Count
+from django.db.models import Avg, Count, F
 from datetime import datetime, timedelta
 import pandas as pd
 import plotly.express as px
@@ -18,6 +18,8 @@ from django.contrib.auth import get_user_model
 from accounts.models import CustomUser
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.db.models import Q
+from django.contrib import messages
+from django.urls import reverse
 
 
 # try:
@@ -33,24 +35,66 @@ def user_performance(request, user_id):
     print(f"Viewing performance for user: {user.username} (ID: {user_id})")
     print(f"Current user: {request.user.username} (Role: {request.user.role})")
     
+    # Get search and filter parameters
+    search_query = request.GET.get('search', '')
+    filter_by = request.GET.get('filter_by', '')
+    status_filter = request.GET.get('status', '')
+    
     # Check permissions and get appropriate test attempts
     if request.user.role == 'teacher' or request.user.is_superuser:
-        # For teachers, show attempts for tests they created
+        # For teachers, show all attempts for tests they created
         test_attempts = TestAttempt.objects.filter(
             test__teacher=request.user
-        ).select_related('test', 'user', 'feedback')
+        ).select_related('test', 'user', 'feedback').order_by('-attempt_date')
         print(f"Teacher view - Found {test_attempts.count()} attempts")
     elif request.user.id == user_id:
         # For students, show their own attempts
         test_attempts = TestAttempt.objects.filter(
             user=user
-        ).select_related('test', 'user', 'feedback')
+        ).select_related('test', 'user', 'feedback').order_by('-attempt_date')
         print(f"Student view - Found {test_attempts.count()} attempts")
     else:
         return HttpResponseForbidden("You don't have permission to view this page.")
 
+    # Apply search filter if search query exists
+    if search_query:
+        if filter_by == 'test':
+            test_attempts = test_attempts.filter(test__title__icontains=search_query)
+        elif filter_by == 'student':
+            test_attempts = test_attempts.filter(user__username__icontains=search_query)
+        else:
+            # Default search across both test name and student name
+            test_attempts = test_attempts.filter(
+                Q(test__title__icontains=search_query) |
+                Q(user__username__icontains=search_query)
+            )
+
+    # Apply status filter if selected
+    if status_filter:
+        if status_filter == 'passed':
+            test_attempts = test_attempts.filter(percentage__gte=F('test__pass_mark'))
+        elif status_filter == 'failed':
+            test_attempts = test_attempts.filter(percentage__lt=F('test__pass_mark'))
+        elif status_filter == 'pending':
+            test_attempts = test_attempts.filter(feedback__isnull=True)
+
+    # Handle feedback submission
+    if request.method == 'POST' and (request.user.role == 'teacher' or request.user.is_superuser):
+        test_attempt_id = request.POST.get('test_attempt_id')
+        feedback_text = request.POST.get('feedback')
+        
+        if test_attempt_id and feedback_text:
+            test_attempt = get_object_or_404(TestAttempt, id=test_attempt_id)
+            feedback = Feedback.objects.create(
+                test_attempt=test_attempt,
+                teacher=request.user,
+                feedback_text=feedback_text
+            )
+            messages.success(request, 'Feedback submitted successfully!')
+            return redirect('performance_analytics:user_performance', user_id=user_id)
+
     # Pagination logic
-    paginator = Paginator(test_attempts, 10)  # Show 5 attempts per page
+    paginator = Paginator(test_attempts, 10)  # Show 10 attempts per page
     page_number = request.GET.get('page')
     try:
         page_obj = paginator.get_page(page_number)
@@ -62,59 +106,96 @@ def user_performance(request, user_id):
         page_obj = paginator.get_page(paginator.num_pages)
 
     context = {
-        'page_obj': page_obj,  # Pass the page_obj to template for pagination
+        'page_obj': page_obj,
         'user': user,
-        'page_title': 'User Performance - MCQ Test System'
+        'is_teacher': request.user.role == 'teacher' or request.user.is_superuser,
+        'page_title': 'Test Results - MCQ Test System',
+        'search_query': search_query,
+        'filter_by': filter_by,
+        'status_filter': status_filter,
     }
-
-    return render(request, 'performance_analytics/user_performance.html', context)
 
     return render(request, 'performance_analytics/user_performance.html', context)
 
 
 @login_required
 def test_details(request, test_attempt_id):
-    # Fetch the TestAttempt object by the provided test_attempt_id.
+    # Fetch the TestAttempt object
     test_attempt = get_object_or_404(TestAttempt, id=test_attempt_id)
+    
+    # Check permissions
+    if not (request.user.role == 'teacher' or request.user.is_superuser or request.user.id == test_attempt.user.id):
+        return HttpResponseForbidden("You don't have permission to view this page.")
     
     # Fetch feedback if available
     feedback = None
     if hasattr(test_attempt, 'feedback'):
         feedback = test_attempt.feedback
 
-    # Check if the user has permission to view the details
-    if request.user.role == 'teacher' or request.user.is_superuser:
-        # For teachers, display additional information
-        teacher_feedback = feedback if feedback else None
-    elif request.user.id == test_attempt.user.id:
-        # For students, display only their attempt details
-        teacher_feedback = feedback if feedback else None
-    else:
-        return HttpResponseForbidden("You don't have permission to view this page.")
-    
-    # Calculate statistics for the test (if it's available)
-    test = test_attempt.test  # Get the associated test for the test attempt
-    total_attempts = TestAttempt.objects.filter(test=test).count()  # Count all attempts for this test
-
-    if total_attempts > 0:
-        average_score = sum(attempt.score for attempt in TestAttempt.objects.filter(test=test)) / total_attempts
+    # Calculate time taken
+    if test_attempt.start_time and test_attempt.updated_at:
+        time_taken = test_attempt.updated_at - test_attempt.start_time
+        total_seconds = int(time_taken.total_seconds())
         
-        # Count the number of tests with feedback (based on the original queryset)
+        # Calculate hours, minutes, and seconds
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+        seconds = total_seconds % 60
+        
+        # Create time taken string
+        time_parts = []
+        if hours > 0:
+            time_parts.append(f"{hours} hour{'s' if hours != 1 else ''}")
+        if minutes > 0:
+            time_parts.append(f"{minutes} minute{'s' if minutes != 1 else ''}")
+        if seconds > 0 or not time_parts:  # Include seconds if it's the only unit or if there are seconds
+            time_parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
+        
+        time_taken_str = " ".join(time_parts)
+    else:
+        time_taken_str = "Time not available"
+
+    # Calculate statistics
+    test = test_attempt.test
+    total_attempts = TestAttempt.objects.filter(test=test).count()
+    
+    if total_attempts > 0:
+        # Calculate average percentage
+        avg_percentage = TestAttempt.objects.filter(test=test).aggregate(avg=Avg('percentage'))['avg'] or 0
+        avg_percentage = round(avg_percentage, 1)
         tests_with_feedback = TestAttempt.objects.filter(test=test, feedback__isnull=False).count()
     else:
-        average_score = 0
+        avg_percentage = 0
         tests_with_feedback = 0
-    
-    # Add the calculated statistics to the context
+
+    # Determine user perspective and role
+    is_viewing_own_attempt = request.user.id == test_attempt.user.id
+    is_teacher = request.user.role == 'teacher' or request.user.is_superuser
+    is_student = request.user.role == 'student'
+
+    # Determine the correct back URL based on user role
+    if is_teacher:
+        back_url = reverse('performance_analytics:visualize_performance', kwargs={'user_id': request.user.id})
+        back_text = "Back to Class Overview"
+    elif is_student and is_viewing_own_attempt:
+        back_url = reverse('performance_analytics:user_performance', kwargs={'user_id': request.user.id})
+        back_text = "Back to My Performance"
+    else:
+        # If a student is viewing another student's attempt (shouldn't happen due to permissions)
+        return HttpResponseForbidden("You don't have permission to view this page.")
+
     context = {
         'test_attempt': test_attempt,
         'feedback': feedback,
-        'teacher_feedback': teacher_feedback,  # Including feedback if teacher or student
-        'user': request.user,
-        'average_score': round(average_score, 1),  # Rounded average score
-        'tests_with_feedback': tests_with_feedback,
         'total_attempts': total_attempts,
-        'page_title': 'Test Details - MCQ Test System',
+        'average_percentage': avg_percentage,
+        'tests_with_feedback': tests_with_feedback,
+        'time_taken': time_taken_str,
+        'is_viewing_own_attempt': is_viewing_own_attempt,
+        'is_teacher': is_teacher,
+        'back_url': back_url,
+        'back_text': back_text,
+        'page_title': f'Test Details: {test_attempt.test.title}',
     }
 
     return render(request, 'performance_analytics/test_details.html', context)
@@ -194,105 +275,95 @@ def delete_feedback(request, test_attempt_id):
 
 @login_required
 def visualize_performance(request, user_id):
-    # Initialize sentiment analyzer
-    sia = SentimentIntensityAnalyzer()
+    if not (request.user.role == 'teacher' or request.user.is_superuser):
+        return redirect('performance_analytics:student_analytics', student_id=request.user.id)
     
-    # Fetch test attempts based on user role
-    if request.user.role == 'teacher' or request.user.is_superuser:
-        test_attempts = TestAttempt.objects.filter(test__teacher=request.user)
-    elif request.user.role == 'student' and request.user.id == user_id:
-        test_attempts = TestAttempt.objects.filter(user_id=user_id)
-    else:
-        test_attempts = []
-
-    # Prepare performance metrics
+    students = get_user_model().objects.filter(role='student')
+    student_performance = []
+    
+    # Prepare data for charts
     performance_data = []
+    feedback_sentiment = {'positive': 0, 'neutral': 0, 'negative': 0}
     
-    for attempt in test_attempts:
-        # Calculate time taken for each test attempt (assuming you have start_time and updated_at)
-        if attempt.start_time and attempt.updated_at:
-            time_taken = attempt.updated_at - attempt.start_time
-            total_seconds = int(time_taken.total_seconds())
+    for student in students:
+        attempts = TestAttempt.objects.filter(user=student)
+        if attempts.exists():
+            avg_percentage = attempts.aggregate(avg=Avg('percentage'))['avg'] or 0
+            student_performance.append({
+                'id': student.id,
+                'name': student.username,
+                'tests_taken': attempts.count(),
+                'average_percentage': round(avg_percentage, 1)
+            })
             
-            # Calculate hours, minutes, and seconds
-            hours = total_seconds // 3600
-            minutes = (total_seconds % 3600) // 60
-            seconds = total_seconds % 60
-            time_taken_str = f"{hours} hour{'s' if hours != 1 else ''} {minutes} minute{'s' if minutes != 1 else ''} {seconds} second{'s' if seconds != 1 else ''}"
-        else:
-            time_taken_str = "N/A"  # If time data is missing
+            # Collect performance data for line chart
+            for attempt in attempts:
+                performance_data.append({
+                    'date': attempt.attempt_date.strftime('%Y-%m-%d'),
+                    'percentage': attempt.percentage,
+                    'student': student.username,
+                    'test_name': attempt.test.title
+                })
+                
+                # Count feedback sentiment
+                if hasattr(attempt, 'feedback') and attempt.feedback and attempt.feedback.sentiment_label:
+                    feedback_sentiment[attempt.feedback.sentiment_label] += 1
 
-        # Get feedback sentiment
-        feedback = getattr(attempt, 'feedback', None)
-        sentiment_score = sia.polarity_scores(feedback.content) if feedback and feedback.content else {
-            'pos': 0, 'neu': 0, 'neg': 0, 'compound': 0
-        }
-
-        # Append performance data
-        performance_data.append({
-            'date': attempt.attempt_date.strftime('%Y-%m-%d'),
-            'score': attempt.score,
-            'test_name': attempt.test.title,
-            'student': attempt.user.username,
-            'student_id': attempt.user.id,
-            'sentiment_score': sentiment_score['compound'],
-            'sentiment': get_sentiment_label(sentiment_score['compound']),
-            'time_taken': time_taken_str,  
-            
-        })
-
-    # Convert to DataFrame for easier analysis
-    df = pd.DataFrame(performance_data)
-    
-    # Generate visualizations
+    # Create line chart for performance over time
+    df = pd.DataFrame(performance_data) if performance_data else pd.DataFrame()
     if not df.empty:
-        # 1. Score Timeline
-        fig1 = px.line(df, x='date', y='score', color='student', title='Score Progress Over Time')
-        timeline_plot = fig1.to_html(full_html=False)
-
-        # 2. Average Scores by Test
-        avg_scores = df.groupby('test_name')['score'].mean().reset_index()
-        fig2 = px.bar(avg_scores, x='test_name', y='score', title='Average Scores by Test')
-        avg_scores_plot = fig2.to_html(full_html=False)
-
-        # 3. Sentiment vs Score Correlation
-        df['sentiment_label'] = df['sentiment'].apply(lambda x: x['label'])
-        fig3 = px.scatter(df, 
-                         x='sentiment_score', 
-                         y='score',
-                         color='sentiment_label',
-                         title='Feedback Sentiment vs Score Correlation',
-                         labels={'sentiment_score': 'Sentiment (Negative → Positive)', 'score': 'Test Score (%)'})
-        sentiment_plot = fig3.to_html(full_html=False)
-
-        # 4. Performance Distribution
-        fig4 = px.histogram(df, x='score', nbins=20, title='Score Distribution')
-        distribution_plot = fig4.to_html(full_html=False)
-
+        fig1 = px.line(df, x='date', y='percentage', color='student',
+                      title='Student Performance Over Time',
+                      labels={'date': 'Test Date', 'percentage': 'Score (%)', 'student': 'Student'},
+                      template='simple_white')
+        fig1.update_layout(height=400, margin=dict(t=30, b=30, l=30, r=30))
+        performance_plot = fig1.to_html(full_html=False)
     else:
-        timeline_plot = ""
-        avg_scores_plot = ""
-        sentiment_plot = ""
-        distribution_plot = ""
+        performance_plot = ""
 
-    # Calculate summary statistics
+    # Create bar chart for average scores
+    if student_performance:
+        avg_scores = pd.DataFrame(student_performance)
+        fig2 = px.bar(avg_scores, x='name', y='average_percentage',
+                     title='Average Scores by Student',
+                     labels={'name': 'Student', 'average_percentage': 'Average Score (%)'},
+                     template='simple_white')
+        fig2.update_layout(height=400, margin=dict(t=30, b=30, l=30, r=30))
+        avg_scores_plot = fig2.to_html(full_html=False)
+    else:
+        avg_scores_plot = ""
+
+    # Create pie chart for feedback sentiment
+    if any(feedback_sentiment.values()):
+        sentiment_data = pd.DataFrame({
+            'sentiment': list(feedback_sentiment.keys()),
+            'count': list(feedback_sentiment.values())
+        })
+        fig3 = px.pie(sentiment_data, values='count', names='sentiment',
+                     title='Feedback Sentiment Distribution',
+                     template='simple_white',
+                     color='sentiment',
+                     color_discrete_map={'positive': '#28a745', 'neutral': '#ffc107', 'negative': '#dc3545'})
+        fig3.update_layout(height=400, margin=dict(t=30, b=30, l=30, r=30))
+        sentiment_plot = fig3.to_html(full_html=False)
+    else:
+        sentiment_plot = ""
+
     summary_stats = {
-        'total_attempts': len(df) if not df.empty else 0,
-        'avg_score': df['score'].mean() if not df.empty else 0,
-        'highest_score': df['score'].max() if not df.empty else 0,
-        'lowest_score': df['score'].min() if not df.empty else 0,
+        'total_students': len(student_performance),
+        'class_average': round(sum(s['average_percentage'] for s in student_performance) / len(student_performance), 1) if student_performance else 0,
+        'pass_rate': round(len([s for s in student_performance if s['average_percentage'] >= 70]) / len(student_performance) * 100, 1) if student_performance else 0,
+        'total_tests': TestAttempt.objects.count()
     }
 
     context = {
-        'timeline_plot': timeline_plot,
+        'student_performance': student_performance,
+        'summary_stats': summary_stats,
+        'performance_plot': performance_plot,
         'avg_scores_plot': avg_scores_plot,
         'sentiment_plot': sentiment_plot,
-        'distribution_plot': distribution_plot,
-        'summary_stats': summary_stats,
-        'performance_data': performance_data,
-        'page_title': 'Performance Analytics - MCQ Test System'
+        'page_title': 'Performance Analytics Dashboard'
     }
-
     return render(request, 'performance_analytics/visualize_performance.html', context)
 
 @login_required
@@ -318,105 +389,108 @@ def visualize_student_performance(request, user_id):
 
 @login_required
 def student_analytics(request, student_id):
-    # Check if user is authorized
-    if not (request.user.role == 'teacher' or request.user.is_superuser):
-        return redirect('home')
-    
-    # Get student object
+    # Get the student object
     student = get_object_or_404(get_user_model(), id=student_id)
     
-    # Initialize sentiment analyzer
-    sia = SentimentIntensityAnalyzer()
+    # Check authorization
+    if not (request.user.role == 'teacher' or request.user.is_superuser or request.user.id == student_id):
+        return redirect('home')
     
-    # Fetch all test attempts for this student
-    test_attempts = TestAttempt.objects.filter(user_id=student_id)
+    # Get test attempts
+    test_attempts = TestAttempt.objects.filter(user_id=student_id).order_by('-attempt_date')
     
-    # Prepare performance metrics
+    # Prepare performance data
     performance_data = []
+    feedback_sentiment = {'positive': 0, 'neutral': 0, 'negative': 0}
     
     for attempt in test_attempts:
-        # Get feedback sentiment
-        feedback = getattr(attempt, 'feedback', None)
-        sentiment_score = sia.polarity_scores(feedback.content) if feedback and feedback.content else {
-            'pos': 0, 'neu': 0, 'neg': 0, 'compound': 0
-        }
-        
-        # Append performance data
         performance_data.append({
             'date': attempt.attempt_date.strftime('%Y-%m-%d'),
-            'score': attempt.score,
+            'percentage': attempt.percentage,
             'test_name': attempt.test.title,
-            'student': attempt.user.username,
-            'student_id': attempt.user.id,
-            'sentiment_score': sentiment_score['compound'],
-            'sentiment': get_sentiment_label(sentiment_score['compound'])
+            'attempt_id': attempt.id,
+            'category': getattr(attempt.test, 'category', 'Uncategorized'),
+            'pass_mark': attempt.test.pass_mark
         })
+        
+        # Count feedback sentiment
+        if hasattr(attempt, 'feedback') and attempt.feedback and attempt.feedback.sentiment_label:
+            feedback_sentiment[attempt.feedback.sentiment_label] += 1
 
     # Convert to DataFrame for analysis
-    df = pd.DataFrame(performance_data)
+    df = pd.DataFrame(performance_data) if performance_data else pd.DataFrame()
     
+    # Create line chart for performance over time
     if not df.empty:
-        # 1. Score Timeline
-        fig1 = px.line(df, x='date', y='score',
-                      title=f'Score Progress Over Time - {student.username}')
+        fig1 = px.line(df, x='date', y='percentage', 
+                      title='Score Progress',
+                      labels={'date': 'Test Date', 'percentage': 'Score (%)'},
+                      template='simple_white')
+        fig1.update_layout(showlegend=False, height=400, margin=dict(t=30, b=30, l=30, r=30))
         timeline_plot = fig1.to_html(full_html=False)
-
-        # 2. Average Scores by Test
-        avg_scores = df.groupby('test_name')['score'].mean().reset_index()
-        fig2 = px.bar(avg_scores, x='test_name', y='score',
-                     title=f'Average Scores by Test - {student.username}')
+        
+        # Create bar chart for performance by category
+        avg_by_category = df.groupby('category')['percentage'].mean().reset_index()
+        fig2 = px.bar(avg_by_category, x='category', y='percentage',
+                     title='Average Score by Subject',
+                     labels={'category': 'Subject', 'percentage': 'Average Score (%)'},
+                     template='simple_white')
+        fig2.update_layout(height=400, margin=dict(t=30, b=30, l=30, r=30))
         avg_scores_plot = fig2.to_html(full_html=False)
-
-        # 3. Sentiment vs Score Correlation
-        df['sentiment_label'] = df['sentiment'].apply(lambda x: x['label'])
-        fig3 = px.scatter(df, 
-                         x='sentiment_score', 
-                         y='score',
-                         color='sentiment_label',
-                         title='Feedback Sentiment vs Score Correlation',
-                         labels={
-                             'sentiment_score': 'Sentiment (Negative → Positive)',
-                             'score': 'Test Score (%)',
-                             'sentiment_label': 'Sentiment Category'
-                         })
-        sentiment_plot = fig3.to_html(full_html=False)
-
-        # 4. Performance Distribution
-        fig4 = px.histogram(df, x='score', nbins=20,
-                          title=f'Score Distribution - {student.username}')
-        distribution_plot = fig4.to_html(full_html=False)
+        
+        # Create pie chart for feedback sentiment
+        if any(feedback_sentiment.values()):
+            sentiment_data = pd.DataFrame({
+                'sentiment': list(feedback_sentiment.keys()),
+                'count': list(feedback_sentiment.values())
+            })
+            fig3 = px.pie(sentiment_data, values='count', names='sentiment',
+                         title='Feedback Sentiment Distribution',
+                         template='simple_white',
+                         color='sentiment',
+                         color_discrete_map={'positive': '#28a745', 'neutral': '#ffc107', 'negative': '#dc3545'})
+            fig3.update_layout(height=400, margin=dict(t=30, b=30, l=30, r=30))
+            sentiment_plot = fig3.to_html(full_html=False)
+        else:
+            sentiment_plot = ""
     else:
         timeline_plot = ""
         avg_scores_plot = ""
         sentiment_plot = ""
-        distribution_plot = ""
 
     # Calculate summary statistics
     summary_stats = {
         'total_attempts': len(df) if not df.empty else 0,
-        'avg_score': df['score'].mean() if not df.empty else 0,
-        'highest_score': df['score'].max() if not df.empty else 0,
-        'lowest_score': df['score'].min() if not df.empty else 0,
+        'avg_score': round(df['percentage'].mean(), 1) if not df.empty else 0,
+        'highest_score': int(df['percentage'].max()) if not df.empty else 0,
+        'latest_score': int(df['percentage'].iloc[0]) if not df.empty else 0
     }
+
+    # Determine user role and appropriate back URL
+    is_teacher = request.user.role == 'teacher' or request.user.is_superuser
+    is_viewing_own_analytics = request.user.id == student_id
+
+    if is_teacher:
+        back_url = reverse('performance_analytics:visualize_performance', kwargs={'user_id': request.user.id})
+        back_text = "Back to Class Overview"
+    elif is_viewing_own_analytics:
+        back_url = reverse('performance_analytics:user_performance', kwargs={'user_id': request.user.id})
+        back_text = "Back to My Performance"
+    else:
+        # This shouldn't happen due to permission checks above
+        return HttpResponseForbidden("You don't have permission to view this page.")
 
     context = {
         'student': student,
         'timeline_plot': timeline_plot,
         'avg_scores_plot': avg_scores_plot,
         'sentiment_plot': sentiment_plot,
-        'distribution_plot': distribution_plot,
         'summary_stats': summary_stats,
         'performance_data': performance_data,
-        'page_title': 'Performance Analytics - MCQ Test System'
+        'page_title': f'Analytics for {student.username}',
+        'is_teacher': is_teacher,
+        'back_url': back_url,
+        'back_text': back_text
     }
 
     return render(request, 'performance_analytics/students_analytics.html', context)
-
-def get_sentiment_label(compound_score):
-    """Convert compound sentiment score to a human-readable label"""
-    if compound_score >= 0.05:
-        return {'label': 'Positive', 'class': 'text-success'}
-    elif compound_score <= -0.05:
-        return {'label': 'Negative', 'class': 'text-danger'}
-    else:
-        return {'label': 'Neutral', 'class': 'text-warning'}

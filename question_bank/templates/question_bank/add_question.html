@@ -1,109 +1,233 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="text-center mt-4 mb-4">Add Questions</h1>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 text-center">Add Questions</h1>
+            <p class="text-muted text-center">Create new questions for your question bank</p>
+        </div>
+    </div>
 
-    <div class="container mt-4">
-        <!-- <h1>Welcome, {{ request.user | capfirst }}!</h1>
-        <p>Here you can create questions, tests, and manage the question bank, view students' progress, and analyze their performance.</p> -->
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-12 col-md-3 mb-4">
+            {% include 'sidebar.html' %}
+        </div>
 
-        <div class="row">
-            <!-- Sidebar with col-md-2 for responsive width -->
-            <div class="col-12 col-md-3">
-                {% include 'sidebar.html' %}
-            </div>
-
-            <!-- Add Question Form Section with col-md-10 -->
-            <div class="col-12 col-md-9 p-4 border rounded shadow-sm bg-light">
-                <div>
+        <!-- Add Question Form Section -->
+        <div class="col-12 col-md-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
                     {% if request.user.role == 'teacher' or request.user.is_superuser %}
-                    <form method="post">
+                    <form method="post" class="needs-validation" novalidate>
                         {% csrf_token %}
 
-                        <div class="mb-3">
+                        <!-- Question -->
+                        <div class="mb-4">
                             <label for="question" class="form-label">Question</label>
-                            <input type="text" class="form-control" id="question" name="question" required>
+                            <textarea class="form-control" 
+                                     id="question" 
+                                     name="question" 
+                                     rows="3"
+                                     placeholder="Enter your question here..."
+                                     required></textarea>
+                            <div class="invalid-feedback">
+                                Please enter a question.
+                            </div>
                         </div>
 
-                        <div class="row">
+                        <!-- Options -->
+                        <div class="row g-4 mb-4">
                             <!-- Option A -->
-                            <div class="col-md-6 mb-3">
-                                <label for="option_a" class="form-label">Option A</label>
-                                <input type="text" class="form-control" id="option_a" name="option_a" required>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-success">
+                                    <div class="card-header bg-success bg-opacity-10 border-success">
+                                        <label for="option_a" class="form-label mb-0">Option A</label>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="option_a" 
+                                               name="option_a" 
+                                               placeholder="Enter option A"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Please enter option A.
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Option B -->
-                            <div class="col-md-6 mb-3">
-                                <label for="option_b" class="form-label">Option B</label>
-                                <input type="text" class="form-control" id="option_b" name="option_b" required>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-info">
+                                    <div class="card-header bg-info bg-opacity-10 border-info">
+                                        <label for="option_b" class="form-label mb-0">Option B</label>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="option_b" 
+                                               name="option_b" 
+                                               placeholder="Enter option B"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Please enter option B.
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
 
-                        <div class="row">
                             <!-- Option C -->
-                            <div class="col-md-6 mb-3">
-                                <label for="option_c" class="form-label">Option C</label>
-                                <input type="text" class="form-control" id="option_c" name="option_c" required>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-warning">
+                                    <div class="card-header bg-warning bg-opacity-10 border-warning">
+                                        <label for="option_c" class="form-label mb-0">Option C</label>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="option_c" 
+                                               name="option_c" 
+                                               placeholder="Enter option C"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Please enter option C.
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Option D -->
-                            <div class="col-md-6 mb-3">
-                                <label for="option_d" class="form-label">Option D</label>
-                                <input type="text" class="form-control" id="option_d" name="option_d" required>
+                            <div class="col-md-6">
+                                <div class="card h-100 border-danger">
+                                    <div class="card-header bg-danger bg-opacity-10 border-danger">
+                                        <label for="option_d" class="form-label mb-0">Option D</label>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="option_d" 
+                                               name="option_d" 
+                                               placeholder="Enter option D"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Please enter option D.
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="correct_answer" class="form-label">Correct Answer</label>
-                            <select id="correct_answer" name="correct_answer" class="form-select" required>
-                                <option value="A">A</option>
-                                <option value="B">B</option>
-                                <option value="C">C</option>
-                                <option value="D">D</option>
-                            </select>
+                        <!-- Correct Answer -->
+                        <div class="mb-4">
+                            <label class="form-label">Correct Answer</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="correct_answer" id="answer_a" value="A" required>
+                                <label class="btn btn-outline-success" for="answer_a">Option A</label>
+
+                                <input type="radio" class="btn-check" name="correct_answer" id="answer_b" value="B">
+                                <label class="btn btn-outline-info" for="answer_b">Option B</label>
+
+                                <input type="radio" class="btn-check" name="correct_answer" id="answer_c" value="C">
+                                <label class="btn btn-outline-warning" for="answer_c">Option C</label>
+
+                                <input type="radio" class="btn-check" name="correct_answer" id="answer_d" value="D">
+                                <label class="btn btn-outline-danger" for="answer_d">Option D</label>
+                            </div>
+                            <div class="invalid-feedback">
+                                Please select the correct answer.
+                            </div>
                         </div>
 
-                        <div class="mb-3">
+                        <!-- Explanation -->
+                        <div class="mb-4">
                             <label for="explanation" class="form-label">Explanation</label>
-                            <textarea class="form-control" id="explanation" name="explanation" rows="3" required></textarea>
+                            <textarea class="form-control" 
+                                     id="explanation" 
+                                     name="explanation" 
+                                     rows="3"
+                                     placeholder="Explain why this is the correct answer..."
+                                     required></textarea>
+                            <div class="invalid-feedback">
+                                Please provide an explanation.
+                            </div>
                         </div>
 
-                        <div class="row">
+                        <!-- Difficulty and Category -->
+                        <div class="row g-3 mb-4">
                             <!-- Difficulty -->
-                            <div class="col-md-6 mb-3">
-                                <label for="difficulty" class="form-label">Difficulty</label>
+                            <div class="col-md-6">
+                                <label for="difficulty" class="form-label">Difficulty Level</label>
                                 <select class="form-select" name="difficulty" id="difficulty" required>
+                                    <option value="">Select difficulty</option>
                                     <option value="easy">Easy</option>
                                     <option value="medium">Medium</option>
                                     <option value="hard">Hard</option>
                                 </select>
+                                <div class="invalid-feedback">
+                                    Please select a difficulty level.
+                                </div>
                             </div>
 
                             <!-- Category -->
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-6">
                                 <label for="category" class="form-label">Category</label>
-                                <select name="category" class="form-control" required>
-                                    <option value="">Select Category</option>
+                                <select name="category" class="form-select" required>
+                                    <option value="">Select category</option>
                                     {% for code, name in categories %}
                                     <option value="{{ code }}">{{ name }}</option>
                                     {% endfor %}
                                 </select>
+                                <div class="invalid-feedback">
+                                    Please select a category.
+                                </div>
                             </div>
                         </div>
 
-                        <div class="d-flex justify-content-between">
-                            <button type="submit" class="btn btn-primary">Save</button>
-                            <!-- <a href="{% url 'teacher_dashboard' %}" class="btn btn-secondary">Cancel</a> -->
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Save Question
+                            </button>
                         </div>
                     </form>
 
                     {% else %}
-                    <p class="text-danger text-center">You do not have permission to add questions.</p>
+                    <div class="text-center py-5">
+                        <i class="fas fa-lock fa-3x text-muted mb-3"></i>
+                        <h3>Access Denied</h3>
+                        <p class="text-muted">You do not have permission to add questions.</p>
+                        <a href="{% url 'home' %}" class="btn btn-primary mt-3">
+                            <i class="fas fa-home me-2"></i>Go to Homepage
+                        </a>
+                    </div>
                     {% endif %}
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+</script>
 {% endblock %}

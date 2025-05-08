@@ -1,80 +1,299 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid">
-    <h1 class="text-center mt-4 mb-4">Create a New Test</h1>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 text-center">Create a New Test</h1>
+            <p class="text-muted text-center">Design and configure your MCQ test</p>
+        </div>
+    </div>
 
-    <div class="container mt-4">
-        <div class="row">
-            <div class="col-12 col-md-3">
-                {% include 'sidebar.html' %}
-            </div>
+    <div class="row">
+        <div class="col-12 col-md-3 mb-4">
+            {% include 'sidebar.html' %}
+        </div>
 
-            <!-- Create Test Form Section with col-md-10 -->
-            <div class="col-12 col-md-9 p-4 border rounded shadow-sm bg-light">
-                <form method="POST">
-                    {% csrf_token %}
+        <!-- Create Test Form Section -->
+        <div class="col-12 col-md-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <form method="POST" class="needs-validation" novalidate>
+                        {% csrf_token %}
 
-                    <!-- Title Input -->
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Title:</label>
-                        <input type="text" id="title" name="title" class="form-control" required>
-                    </div>
+                        <!-- Test Details Section -->
+                        <div class="mb-4">
+                            <h4 class="card-title mb-3">
+                                <i class="fas fa-info-circle me-2"></i>Test Details
+                            </h4>
+                            
+                            <!-- Title Input -->
+                            <div class="mb-3">
+                                <label for="title" class="form-label">Title</label>
+                                <input type="text" 
+                                       id="title" 
+                                       name="title" 
+                                       class="form-control form-control-lg" 
+                                       placeholder="Enter test title"
+                                       required>
+                                <div class="invalid-feedback">Please enter a title for the test.</div>
+                            </div>
 
-                    <!-- Description Textarea -->
-                    <div class="mb-3">
-                        <label for="description" class="form-label">Description:</label>
-                        <textarea id="description" name="description" class="form-control" rows="4" required></textarea>
-                    </div>
-
-                    <!-- Duration and Pass Mark Input fields side by side -->
-                    <div class="row">
-                        <!-- Duration Input -->
-                        <div class="col-md-6">
-                            <label for="duration" class="form-label">Duration (in minutes):</label>
-                            <input type="number" id="duration" name="duration" class="form-control" required>
-                            <small class="text-muted">Enter the duration in minutes.</small>
+                            <!-- Description Textarea -->
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Description</label>
+                                <textarea id="description" 
+                                          name="description" 
+                                          class="form-control" 
+                                          rows="4" 
+                                          placeholder="Describe the test content and objectives..."
+                                          required></textarea>
+                                <div class="invalid-feedback">Please provide a description.</div>
+                            </div>
                         </div>
-                    
-                        <!-- Pass Mark Input -->
-                        <div class="col-md-6">
-                            <label for="pass_mark" class="form-label">Pass Mark:</label>
-                            <input type="number" id="pass_mark" name="pass_mark" class="form-control" required>
-                            <small class="text-muted">Pass percentage (e.g., 50 for 50%).</small>
+
+                        <!-- Test Configuration Section -->
+                        <div class="mb-4">
+                            <h4 class="card-title mb-3">
+                                <i class="fas fa-cog me-2"></i>Test Configuration
+                            </h4>
+                            
+                            <div class="row g-3">
+                                <!-- Duration Input -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-info">
+                                        <div class="card-header bg-info bg-opacity-10 border-info">
+                                            <label for="duration" class="form-label mb-0">Duration (minutes)</label>
+                                        </div>
+                                        <div class="card-body">
+                                            <input type="number" 
+                                                   id="duration" 
+                                                   name="duration" 
+                                                   class="form-control" 
+                                                   min="1" 
+                                                   required>
+                                            <div class="invalid-feedback">Please enter a valid duration.</div>
+                                            <small class="text-muted">Enter the duration in minutes</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            
+                                <!-- Pass Mark Input -->
+                                <div class="col-md-6">
+                                    <div class="card h-100 border-success">
+                                        <div class="card-header bg-success bg-opacity-10 border-success">
+                                            <label for="pass_mark" class="form-label mb-0">Pass Mark (%)</label>
+                                        </div>
+                                        <div class="card-body">
+                                            <input type="number" 
+                                                   id="pass_mark" 
+                                                   name="pass_mark" 
+                                                   class="form-control" 
+                                                   min="0" 
+                                                   max="100" 
+                                                   required>
+                                            <div class="invalid-feedback">Please enter a valid pass mark (0-100).</div>
+                                            <small class="text-muted">Enter percentage (e.g., 50 for 50%)</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Publish Checkbox -->
-                    <div class="mb-3 form-check">
-                        <input type="checkbox" class="form-check-input" id="is_published" name="is_published" value="True">
-                        <label class="form-check-label" for="is_published">Publish Test</label>
-                    </div>
+                        <!-- Questions Section -->
+                        <div class="mb-4">
+                            <h4 class="card-title mb-3">
+                                <i class="fas fa-question-circle me-2"></i>Test Questions
+                            </h4>
 
-                    <!-- Form Buttons -->
-                    <div class="d-flex justify-content-between">
-                        <button type="submit" class="btn btn-primary">Create Test</button>
-                    </div>
+                            <!-- Search and Filter -->
+                            <div class="row mb-3">
+                                <div class="col-md-8">
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="questionSearch" 
+                                           placeholder="Search questions..."
+                                           onkeyup="filterQuestions()">
+                                </div>
+                                <div class="col-md-4">
+                                    <select class="form-select" id="categoryFilter" onchange="filterQuestions()">
+                                        <option value="">All Categories</option>
+                                        {% for code, name in categories %}
+                                            <option value="{{ code }}">{{ name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
 
-                    <h4 class="mb-3">Add Questions to Test</h4>
-                    <div class="row">
-                        {% if all_mcqs %}
-                            {% for mcq in all_mcqs %}
-                                <div class="col-md-6 mb-3">
+                            <!-- Questions List -->
+                            <div class="card">
+                                <div class="card-header bg-light">
                                     <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" name="mcqs" value="{{ mcq.id }}" id="mcq-{{ mcq.id }}">
-                                        <label class="form-check-label" for="mcq-{{ mcq.id }}">
-                                            {{ mcq.question }}
+                                        <input class="form-check-input" type="checkbox" id="selectAll" onchange="toggleAllQuestions()">
+                                        <label class="form-check-label" for="selectAll">
+                                            Select All Questions
                                         </label>
                                     </div>
                                 </div>
-                            {% endfor %}
-                        {% else %}
-                            <p class="text-danger">No questions available to add.</p>
-                        {% endif %}
-                    </div>
-                </form>
+                                <div class="card-body" style="max-height: 400px; overflow-y: auto;">
+                                    <div class="row" id="questionsList">
+                                        {% if all_mcqs %}
+                                            {% for mcq in all_mcqs %}
+                                                <div class="col-12 mb-2 question-item" data-category="{{ mcq.category }}">
+                                                    <div class="card">
+                                                        <div class="card-body">
+                                                            <div class="form-check">
+                                                                <input class="form-check-input question-checkbox" 
+                                                                       type="checkbox" 
+                                                                       name="mcqs" 
+                                                                       value="{{ mcq.id }}" 
+                                                                       id="mcq-{{ mcq.id }}">
+                                                                <label class="form-check-label" for="mcq-{{ mcq.id }}">
+                                                                    {{ mcq.question }}
+                                                                    <span class="badge bg-info ms-2">{{ mcq.get_category_display }}</span>
+                                                                    <span class="badge bg-{{ mcq.difficulty|lower }}-subtle ms-1">
+                                                                        {{ mcq.difficulty|title }}
+                                                                    </span>
+                                                                    {% if mcq.teacher == request.user %}
+                                                                        <span class="badge bg-primary ms-1">Your Question</span>
+                                                                    {% else %}
+                                                                        <span class="badge bg-secondary ms-1">{{ mcq.teacher.username }}</span>
+                                                                    {% endif %}
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="col-12 text-center py-4">
+                                                <i class="fas fa-question-circle fa-3x text-muted mb-3"></i>
+                                                <p class="text-muted">No questions available.</p>
+                                                <a href="{% url 'add_question' %}" class="btn btn-primary">
+                                                    <i class="fas fa-plus me-2"></i>Add Questions
+                                                </a>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Publish Option -->
+                        <div class="mb-4">
+                            <div class="form-check form-switch">
+                                <input type="checkbox" 
+                                       class="form-check-input" 
+                                       id="is_published" 
+                                       name="is_published" 
+                                       value="True">
+                                <label class="form-check-label" for="is_published">
+                                    Publish test immediately
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Create Test
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
+</div>
+
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+
+                // Check for minimum questions
+                const selectedQuestions = document.querySelectorAll('.question-checkbox:checked').length;
+                if (selectedQuestions < 2) {
+                    event.preventDefault();
+                    alert('Please select at least 2 questions for the test.');
+                    return false;
+                }
+
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+
+// Filter questions
+function filterQuestions() {
+    const searchText = document.getElementById('questionSearch').value.toLowerCase();
+    const categoryFilter = document.getElementById('categoryFilter').value;
+    const questions = document.querySelectorAll('.question-item');
+
+    questions.forEach(question => {
+        const questionText = question.querySelector('.form-check-label').textContent.toLowerCase();
+        const category = question.dataset.category;
+        
+        const matchesSearch = questionText.includes(searchText);
+        const matchesCategory = !categoryFilter || category === categoryFilter;
+
+        question.style.display = matchesSearch && matchesCategory ? '' : 'none';
+    });
+}
+
+// Toggle all questions
+function toggleAllQuestions() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.question-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    updateSelectedCount();
+}
+
+// Update selected count
+function updateSelectedCount() {
+    const selectedCount = document.querySelectorAll('.question-checkbox:checked').length;
+    const submitButton = document.querySelector('button[type="submit"]');
+    const countDisplay = document.getElementById('selectedCount');
+    
+    if (countDisplay) {
+        countDisplay.textContent = `Selected Questions: ${selectedCount}`;
+    }
+    
+    // Update submit button state
+    if (submitButton) {
+        submitButton.disabled = selectedCount < 2;
+        if (selectedCount < 2) {
+            submitButton.title = 'Select at least 2 questions';
+        } else {
+            submitButton.title = 'Create Test';
+        }
+    }
+}
+
+// Add event listeners to checkboxes
+document.querySelectorAll('.question-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedCount);
+});
+
+// Initial count update
+document.addEventListener('DOMContentLoaded', updateSelectedCount);
+</script>
+
+<!-- Add a counter for selected questions -->
+<div class="mb-3">
+    <span id="selectedCount" class="text-muted"></span>
 </div>
 {% endblock %}

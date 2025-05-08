@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from accounts import views 
 from accounts.views import home 
+from django.conf import settings
+from django.conf.urls.static import static
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -28,7 +30,5 @@ urlpatterns = [
     path('question-bank/', include('question_bank.urls'), name='question_bank'),
     path('attempt_test/', include('attempt_test.urls'), name='attempt_test'),
     path('performance-analytics/', include('performance_analytics.urls')),
-    
-    
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

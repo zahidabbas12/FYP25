@@ -1,71 +1,237 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<div class="container-fluid d-flex justify-content-center align-items-center vh-100 pt-5">
-    <div class="w-100" style="max-width: 1000px;">
-        <h2>Edit Question</h2>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="h2 text-center">Edit Question</h1>
+            <p class="text-muted text-center">Modify and improve your question</p>
+        </div>
+    </div>
 
-        {% if request.user.role == 'teacher' or request.user.is_superuser %}
-        <form method="post" class="mx-auto mt-4 bg-light p-3 rounded">
-            {% csrf_token %}
-            <div class="mb-2">
-                <label for="question" class="form-label">Question</label>
-                <input type="text" class="form-control form-control-sm" id="question" name="question" value="{{ form.question.value }}" required>
-            </div>
-            <div class="mb-2">
-                <label for="option_a" class="form-label">Option A</label>
-                <input type="text" class="form-control form-control-sm" id="option_a" name="option_a" value="{{ form.option_a.value }}" required>
-            </div>
-            <div class="mb-2">
-                <label for="option_b" class="form-label">Option B</label>
-                <input type="text" class="form-control form-control-sm" id="option_b" name="option_b" value="{{ form.option_b.value }}" required>
-            </div>
-            <div class="mb-2">
-                <label for="option_c" class="form-label">Option C</label>
-                <input type="text" class="form-control form-control-sm" id="option_c" name="option_c" value="{{ form.option_c.value }}" required>
-            </div>
-            <div class="mb-2">
-                <label for="option_d" class="form-label">Option D</label>
-                <input type="text" class="form-control form-control-sm" id="option_d" name="option_d" value="{{ form.option_d.value }}" required>
-            </div>
-            <div class="mb-2">
-                <label for="correct_answer" class="form-label">Correct Answer</label>
-                <select id="correct_answer" name="correct_answer" class="form-select form-select-sm" required>
-                    <option value="A" {% if form.correct_answer.value == "A" %}selected{% endif %}>A</option>
-                    <option value="B" {% if form.correct_answer.value == "B" %}selected{% endif %}>B</option>
-                    <option value="C" {% if form.correct_answer.value == "C" %}selected{% endif %}>C</option>
-                    <option value="D" {% if form.correct_answer.value == "D" %}selected{% endif %}>D</option>
-                </select>
-            </div>
-            <div class="mb-2">
-                <label for="explanation" class="form-label">Explanation</label>
-                <textarea class="form-control form-control-sm" id="explanation" name="explanation" rows="2" required>{{ form.explanation.value }}</textarea>
-            </div>
-            <div class="mb-2">
-                <label for="difficulty" class="form-label">Difficulty</label>
-                <select class="form-select form-select-sm" name="difficulty" id="difficulty" required>
-                    <option value="easy" {% if form.difficulty.value == "easy" %}selected{% endif %}>Easy</option>
-                    <option value="medium" {% if form.difficulty.value == "medium" %}selected{% endif %}>Medium</option>
-                    <option value="hard" {% if form.difficulty.value == "hard" %}selected{% endif %}>Hard</option>
-                </select>
-            </div>
-            <div class="mb-2">
-                <label for="category" class="form-label">Category</label>
-                <select class="form-select form-select-sm" name="category" id="category" required>
-                    {% for category in categories %}
-                        <option value="{{ category }}" {% if category == form.category.value %}selected{% endif %}>
-                            {{ category }}
-                        </option>
-                    {% endfor %}
-                </select>
-            </div>         
-            <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
-            <a href="{{ request.META.HTTP_REFERER }}" class="btn btn-secondary btn-sm ms-2">Cancel</a>
-        </form>
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-12 col-md-3 mb-4">
+            {% include 'sidebar.html' %}
+        </div>
 
-        {% else %}
-            <p>You do not have permission to edit this question.</p>
-        {% endif %}
+        <!-- Main Content -->
+        <div class="col-12 col-md-9">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    {% if request.user.role == 'teacher' or request.user.is_superuser %}
+                    <form method="post" class="needs-validation" novalidate>
+                        {% csrf_token %}
+
+                        <!-- Question -->
+                        <div class="mb-4">
+                            <label for="question" class="form-label">Question</label>
+                            <textarea class="form-control" 
+                                     id="question" 
+                                     name="question" 
+                                     rows="3"
+                                     required>{{ form.question.value }}</textarea>
+                            <div class="invalid-feedback">
+                                Please enter a question.
+                            </div>
+                        </div>
+
+                        <!-- Options -->
+                        <div class="row g-4 mb-4">
+                            <!-- Option A -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-success">
+                                    <div class="card-header bg-success bg-opacity-10 border-success">
+                                        <label for="option_a" class="form-label mb-0">Option A</label>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="option_a" 
+                                               name="option_a" 
+                                               value="{{ form.option_a.value }}"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Please enter option A.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Option B -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-info">
+                                    <div class="card-header bg-info bg-opacity-10 border-info">
+                                        <label for="option_b" class="form-label mb-0">Option B</label>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="option_b" 
+                                               name="option_b" 
+                                               value="{{ form.option_b.value }}"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Please enter option B.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Option C -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-warning">
+                                    <div class="card-header bg-warning bg-opacity-10 border-warning">
+                                        <label for="option_c" class="form-label mb-0">Option C</label>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="option_c" 
+                                               name="option_c" 
+                                               value="{{ form.option_c.value }}"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Please enter option C.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Option D -->
+                            <div class="col-md-6">
+                                <div class="card h-100 border-danger">
+                                    <div class="card-header bg-danger bg-opacity-10 border-danger">
+                                        <label for="option_d" class="form-label mb-0">Option D</label>
+                                    </div>
+                                    <div class="card-body">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="option_d" 
+                                               name="option_d" 
+                                               value="{{ form.option_d.value }}"
+                                               required>
+                                        <div class="invalid-feedback">
+                                            Please enter option D.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Correct Answer -->
+                        <div class="mb-4">
+                            <label class="form-label">Correct Answer</label>
+                            <div class="btn-group w-100" role="group">
+                                <input type="radio" class="btn-check" name="correct_answer" id="answer_a" value="A" 
+                                       {% if form.correct_answer.value == "A" %}checked{% endif %} required>
+                                <label class="btn btn-outline-success" for="answer_a">Option A</label>
+
+                                <input type="radio" class="btn-check" name="correct_answer" id="answer_b" value="B"
+                                       {% if form.correct_answer.value == "B" %}checked{% endif %}>
+                                <label class="btn btn-outline-info" for="answer_b">Option B</label>
+
+                                <input type="radio" class="btn-check" name="correct_answer" id="answer_c" value="C"
+                                       {% if form.correct_answer.value == "C" %}checked{% endif %}>
+                                <label class="btn btn-outline-warning" for="answer_c">Option C</label>
+
+                                <input type="radio" class="btn-check" name="correct_answer" id="answer_d" value="D"
+                                       {% if form.correct_answer.value == "D" %}checked{% endif %}>
+                                <label class="btn btn-outline-danger" for="answer_d">Option D</label>
+                            </div>
+                        </div>
+
+                        <!-- Explanation -->
+                        <div class="mb-4">
+                            <label for="explanation" class="form-label">Explanation</label>
+                            <textarea class="form-control" 
+                                     id="explanation" 
+                                     name="explanation" 
+                                     rows="3"
+                                     required>{{ form.explanation.value }}</textarea>
+                            <div class="invalid-feedback">
+                                Please provide an explanation.
+                            </div>
+                        </div>
+
+                        <!-- Difficulty and Category -->
+                        <div class="row g-3 mb-4">
+                            <!-- Difficulty -->
+                            <div class="col-md-6">
+                                <label for="difficulty" class="form-label">Difficulty Level</label>
+                                <select class="form-select" name="difficulty" id="difficulty" required>
+                                    <option value="easy" {% if form.difficulty.value == "easy" %}selected{% endif %}>Easy</option>
+                                    <option value="medium" {% if form.difficulty.value == "medium" %}selected{% endif %}>Medium</option>
+                                    <option value="hard" {% if form.difficulty.value == "hard" %}selected{% endif %}>Hard</option>
+                                </select>
+                            </div>
+
+                            <!-- Category -->
+                            <div class="col-md-6">
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" name="category" id="category" required>
+                                    {% for category in categories %}
+                                        <option value="{{ category }}" {% if category == form.category.value %}selected{% endif %}>
+                                            {{ category }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Form Buttons -->
+                        <div class="d-flex justify-content-between align-items-center">
+                            <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </button>
+                            <div>
+                                <button type="button" class="btn btn-danger me-2" onclick="confirmDelete()">
+                                    <i class="fas fa-trash me-2"></i>Delete
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-lock fa-3x text-muted mb-3"></i>
+                        <h3>Access Denied</h3>
+                        <p class="text-muted">You do not have permission to edit questions.</p>
+                        <a href="{% url 'home' %}" class="btn btn-primary mt-3">
+                            <i class="fas fa-home me-2"></i>Go to Homepage
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+// Form validation
+(function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+            form.addEventListener('submit', function (event) {
+                if (!form.checkValidity()) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                }
+                form.classList.add('was-validated')
+            }, false)
+        })
+})()
+
+function confirmDelete() {
+    if (confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
+        window.location.href = "{% url 'delete_question' form.instance.id %}";
+    }
+}
+</script>
 {% endblock %}

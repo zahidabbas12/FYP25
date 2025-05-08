@@ -1,4 +1,3 @@
-
 <h1>Overall Performance</h1>
 <table border="1">
     <thead>
@@ -7,6 +6,7 @@
             <th>Test Name</th>
             <th>Score</th>
             <th>Percentage</th>
+            <th>Status</th>
             <th>Attempt Date</th>
         </tr>
     </thead>
@@ -17,6 +17,13 @@
             <td>{{ performance.test.test.name }}</td>
             <td>{{ performance.score }}</td>
             <td>{{ performance.percentage|floatformat:2 }}%</td>
+            <td>
+                {% if performance.percentage >= performance.test.test.pass_mark %}
+                    <span class="badge bg-success">Passed</span>
+                {% else %}
+                    <span class="badge bg-danger">Failed</span>
+                {% endif %}
+            </td>
             <td>{{ performance.attempt_date }}</td>
         </tr>
         {% endfor %}
