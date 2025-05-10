@@ -195,10 +195,9 @@
                             {% endif %}
                             <div class="password-requirements">
                                 <ul>
-                                    <li id="length">At least 8 characters long</li>
-                                    <li id="number">Contains at least one number</li>
-                                    <li id="letter">Contains at least one letter</li>
-                                    <li id="special">Contains at least one special character</li>
+                                    <li id="length" class="{% if form.password1.errors %}text-danger{% endif %}">At least 8 characters long</li>
+                                    <li id="number" class="{% if form.password1.errors %}text-danger{% endif %}">Contains at least one number</li>
+                                    <li id="letter" class="{% if form.password1.errors %}text-danger{% endif %}">Contains at least one letter</li>
                                 </ul>
                             </div>
                         </div>
@@ -220,6 +219,12 @@
                             </div>
                             {% endif %}
                         </div>
+
+                        {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors|join:", " }}
+                        </div>
+                        {% endif %}
 
                         <!-- Role Field -->
                         <div class="mb-4">
@@ -253,7 +258,46 @@
 </div>
 
 <script>
-    // Password toggle with improved UX
+    // Password validation
+    const password = document.querySelector('#{{ form.password1.id_for_label }}');
+    const requirements = {
+        length: document.querySelector('#length'),
+        number: document.querySelector('#number'),
+        letter: document.querySelector('#letter')
+    };
+
+    password.addEventListener('input', function() {
+        const value = this.value;
+        
+        // Check length
+        if (value.length >= 8) {
+            requirements.length.classList.add('valid');
+            requirements.length.classList.remove('text-danger');
+        } else {
+            requirements.length.classList.remove('valid');
+            requirements.length.classList.add('text-danger');
+        }
+        
+        // Check for number
+        if (/\d/.test(value)) {
+            requirements.number.classList.add('valid');
+            requirements.number.classList.remove('text-danger');
+        } else {
+            requirements.number.classList.remove('valid');
+            requirements.number.classList.add('text-danger');
+        }
+        
+        // Check for letter
+        if (/[a-zA-Z]/.test(value)) {
+            requirements.letter.classList.add('valid');
+            requirements.letter.classList.remove('text-danger');
+        } else {
+            requirements.letter.classList.remove('valid');
+            requirements.letter.classList.add('text-danger');
+        }
+    });
+
+    // Password toggle
     document.querySelectorAll('.toggle-password').forEach(button => {
         button.addEventListener('click', function() {
             const passwordField = this.previousElementSibling;
@@ -262,56 +306,14 @@
             if (passwordField.type === "password") {
                 passwordField.type = "text";
                 icon.classList.replace('fa-eye', 'fa-eye-slash');
-                this.setAttribute('aria-label', 'Hide password');
             } else {
                 passwordField.type = "password";
                 icon.classList.replace('fa-eye-slash', 'fa-eye');
-                this.setAttribute('aria-label', 'Show password');
             }
         });
     });
 
-    // Password strength validation
-    const password1 = document.querySelector('#{{ form.password1.id_for_label }}');
-    if (password1) {
-        password1.addEventListener('input', function() {
-            const value = this.value;
-            const length = document.querySelector('#length');
-            const number = document.querySelector('#number');
-            const letter = document.querySelector('#letter');
-            const special = document.querySelector('#special');
-
-            // Check length
-            if (value.length >= 8) {
-                length.classList.add('valid');
-            } else {
-                length.classList.remove('valid');
-            }
-
-            // Check for number
-            if (/\d/.test(value)) {
-                number.classList.add('valid');
-            } else {
-                number.classList.remove('valid');
-            }
-
-            // Check for letter
-            if (/[a-zA-Z]/.test(value)) {
-                letter.classList.add('valid');
-            } else {
-                letter.classList.remove('valid');
-            }
-
-            // Check for special character
-            if (/[!@#$%^&*(),.?":{}|<>]/.test(value)) {
-                special.classList.add('valid');
-            } else {
-                special.classList.remove('valid');
-            }
-        });
-    }
-
-    // Auto-hide messages with fade effect
+    // Auto-hide messages
     setTimeout(() => {
         document.querySelectorAll('.alert').forEach(alert => {
             alert.style.opacity = '0';

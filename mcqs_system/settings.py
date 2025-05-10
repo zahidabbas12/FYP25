@@ -50,12 +50,14 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'django.middleware.cache.FetchFromCacheMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'mcq.middleware.SessionTimeoutMiddleware',
+    'accounts.middleware.SessionTimeoutMiddleware',
 ]
 
 ROOT_URLCONF = 'mcqs_system.urls'
@@ -169,3 +171,27 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 SESSION_COOKIE_AGE = 3600  # 1 hour in seconds
 SESSION_SAVE_EVERY_REQUEST = True  # Reset session timeout on every request
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True  # Session expires when browser is closed
+
+# Cache Settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+# Cache timeout in seconds (5 minutes)
+CACHE_TTL = 300
+
+# Cookie Settings
+SESSION_COOKIE_SECURE = True  # Only send cookie over HTTPS
+SESSION_COOKIE_HTTPONLY = True  # Prevent JavaScript access to session cookie
+CSRF_COOKIE_SECURE = True  # Only send CSRF cookie over HTTPS
+CSRF_COOKIE_HTTPONLY = True  # Prevent JavaScript access to CSRF cookie
+CSRF_COOKIE_SAMESITE = 'Lax'  # Protect against CSRF attacks
+SESSION_COOKIE_SAMESITE = 'Lax'  # Protect against CSRF attacks
+
+# Cache Control Headers
+CACHE_MIDDLEWARE_SECONDS = 300  # 5 minutes
+CACHE_MIDDLEWARE_KEY_PREFIX = 'mcqs_system'
+CACHE_MIDDLEWARE_ANONYMOUS_ONLY = True  # Only cache anonymous users

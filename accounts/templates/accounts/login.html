@@ -108,9 +108,11 @@
                                 </span>
                                 {{ form.username|add_class:"form-control"|attr:"placeholder:Enter your username" }}
                             </div>
-                            <div class="invalid-feedback">
-                                Please enter your username.
+                            {% if form.username.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.username.errors|join:", " }}
                             </div>
+                            {% endif %}
                         </div>
 
                         <div class="mb-4">
@@ -124,9 +126,16 @@
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
-                            <div class="invalid-feedback">
-                                Please enter your password.
+                            {% if form.password.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.password.errors|join:", " }}
                             </div>
+                            {% endif %}
+                            {% if form.non_field_errors %}
+                            <div class="alert alert-danger mt-2">
+                                {{ form.non_field_errors|join:", " }}
+                            </div>
+                            {% endif %}
                         </div>
 
                         <button type="submit" class="btn btn-primary w-100 py-2 mb-4">
