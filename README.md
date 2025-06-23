@@ -89,5 +89,5 @@ mcq-test-system/
 Contributing:
 Contributions are welcome! If you'd like to improve the system, please fork the repository, make changes, and submit a pull request.
 
-NOTE: I developed this project as my Final Year Project, also part of my learning journey in Django, and I’d love to get feedback from others. Feel free to reach out if you have any questions or suggestions!
+NOTE: I developed this project as my Final Year Project, also part of my learning journey with Django, and I’d love to get feedback from others. Feel free to reach out if you have any questions or suggestions!
 
