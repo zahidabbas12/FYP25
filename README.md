@@ -1,14 +1,13 @@
-MCQ-Based Test System for Exam Preparation Using Python and Django
+**MCQ-Based Test System for Exam Preparation Using Python and Django**
 
-Project Domain / Category: Data Science / Web Application Development
+Project Domain / Category: **Data Science / Web Application Development**
 
 Introduction: Students preparing for exams often struggle with effective self-assessment methods. Traditional study techniques, such as reading notes and textbooks, do not provide interactive or personalized learning experiences. Similarly, teachers require a streamlined platform to create tailored tests for their students.
 
 This project addresses these challenges by developing an MCQ-based exam preparation system using Python and Django. Teachers can create and customize tests from a question bank or automatically generate MCQs from input text. Students can take tests, receive instant feedback, and track their performance over time. The platform provides an adaptive learning environment that simulates real exam conditions.
 
-I developed this project as part of my learning journey in Django. This project is a work in progress, and I’d love to get feedback from others. If you have any suggestions or improvements, feel free to contribute!
 
-Features:
+**Features:**
 
 User Roles:
 
@@ -38,7 +37,6 @@ Tools & Technologies:
 - Frontend: HTML, CSS, Bootstrap
 - NLP Library: NLTK (For automatic MCQ generation)
 - Data Visualization: Matplotlib, Plotly (For performance tracking analytics)
-- Development Tools: VS Code and CursorAI Jupyter Notebook (For development, code assistance, initial data analysis, and model development)
 
 Installation & Setup:
 
@@ -91,5 +89,5 @@ mcq-test-system/
 Contributing:
 Contributions are welcome! If you'd like to improve the system, please fork the repository, make changes, and submit a pull request.
 
-I developed this project as my Final Year Project and part of my learning journey in Django, and I’d love to get feedback from others. Feel free to reach out if you have any questions or suggestions!
+NOTE: I developed this project as my Final Year Project, also part of my learning journey in Django, and I’d love to get feedback from others. Feel free to reach out if you have any questions or suggestions!
 
